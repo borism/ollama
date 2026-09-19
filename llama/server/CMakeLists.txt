@@ -642,7 +642,12 @@ else()
     # ggml-rpc -- it's not GPU-vendor-specific like cuda/hip/vulkan (see the
     # GPU-backend install above, keyed on OLLAMA_GPU_BACKEND), so it lives
     # here in the shared base dir every runner variant loads from, rather
-    # than being duplicated into each GPU preset's install.
+    # than being duplicated into each GPU preset's install. Also installs
+    # ggml-rpc-server, the RPC worker binary (tools/rpc/CMakeLists.txt) --
+    # same reasoning: not GPU-vendor-specific, so it's installed once here
+    # rather than duplicated per GPU preset. Its own install() is gated on
+    # LLAMA_TOOLS_INSTALL, which we force OFF (see above), so it never gets
+    # installed on its own; this glob is what actually ships it.
     # install(CODE) runs at install time so CMAKE_INSTALL_CONFIG_NAME is
     # available for multi-config generators. llama.cpp creates variant module
     # filenames from detected CPU features, so glob the final install payload
@@ -661,11 +666,14 @@ else()
                 \"\${_dir}/ggml-cpu*.dll\"
                 \"\${_dir}/ggml-blas*.dll\"
                 \"\${_dir}/ggml-rpc*.dll\"
+                \"\${_dir}/ggml-rpc-server\"
+                \"\${_dir}/ggml-rpc-server.exe\"
             )
             list(APPEND _cpu_backends \${_dir_cpu_backends})
         endforeach()
         foreach(_f \${_cpu_backends})
-            file(INSTALL \${_f} DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${_base_dest}\")
+            file(INSTALL \${_f} DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${_base_dest}\"
+                USE_SOURCE_PERMISSIONS)
         endforeach()
     " COMPONENT llama-server)
 endif()
