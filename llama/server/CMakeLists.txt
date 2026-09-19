@@ -638,7 +638,11 @@ else()
     # do not depend on host-global redistributables.
     ollama_install_windows_runtime_dlls("${_base_dest}")
 
-    # CPU backend modules (multiple variants from GGML_CPU_ALL_VARIANTS).
+    # CPU backend modules (multiple variants from GGML_CPU_ALL_VARIANTS), plus
+    # ggml-rpc -- it's not GPU-vendor-specific like cuda/hip/vulkan (see the
+    # GPU-backend install above, keyed on OLLAMA_GPU_BACKEND), so it lives
+    # here in the shared base dir every runner variant loads from, rather
+    # than being duplicated into each GPU preset's install.
     # install(CODE) runs at install time so CMAKE_INSTALL_CONFIG_NAME is
     # available for multi-config generators. llama.cpp creates variant module
     # filenames from detected CPU features, so glob the final install payload
@@ -653,8 +657,10 @@ else()
                 LIST_DIRECTORIES false
                 \"\${_dir}/libggml-cpu*\"
                 \"\${_dir}/libggml-blas*\"
+                \"\${_dir}/libggml-rpc*\"
                 \"\${_dir}/ggml-cpu*.dll\"
                 \"\${_dir}/ggml-blas*.dll\"
+                \"\${_dir}/ggml-rpc*.dll\"
             )
             list(APPEND _cpu_backends \${_dir_cpu_backends})
         endforeach()

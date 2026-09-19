@@ -10,7 +10,9 @@
         "BUILD_SHARED_LIBS": "ON",
         "GGML_BACKEND_DL": "ON",
         "GGML_NATIVE": "OFF",
-        "GGML_OPENMP": "OFF"
+        "GGML_OPENMP": "OFF",
+        "GGML_RPC": "ON",
+        "GGML_RPC_RDMA": "OFF"
       }
     },
     {
