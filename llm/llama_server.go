@@ -417,6 +417,7 @@ func startLlamaServer(launch llamaServerLaunchConfig, out io.Writer) (cmd *exec.
 	}
 
 	params = appendMainGPUArgs(params, launch.opts)
+	params = appendRPCArgs(params, launch.opts)
 
 	params = appendContextShiftArgs(params, launch.opts, launch.config.ContextShift)
 
@@ -645,6 +646,20 @@ func appendMainGPUArgs(params []string, opts api.Options) []string {
 	}
 
 	return append(params, "--split-mode", "none", "--main-gpu", strconv.Itoa(*opts.MainGPU))
+}
+
+// appendRPCArgs opts a model into llama.cpp RPC spillover (see tools/rpc in
+// ggml-org/llama.cpp) -- the project-style: static, per-request choice, no
+// scheduler awareness of remote capacity. -ngl is deliberately left alone
+// (see appendLoadModeArgs / the NumGPU==-1 default above): llama-server's
+// own auto placement folds the RPC workers into the same proportional split
+// it already gives local multi-GPU, so there's nothing to compute here.
+func appendRPCArgs(params []string, opts api.Options) []string {
+	if opts.RPCServers == "" {
+		return params
+	}
+
+	return append(params, "--rpc", opts.RPCServers)
 }
 
 func appendMMProjArgs(params []string, launch llamaServerLaunchConfig) []string {

@@ -2094,6 +2094,39 @@ func TestAppendMainGPUArgs(t *testing.T) {
 	}
 }
 
+func TestAppendRPCArgs(t *testing.T) {
+	tests := []struct {
+		name string
+		opts api.Options
+		want []string
+	}{
+		{
+			name: "unset passes no --rpc flag",
+			opts: api.DefaultOptions(),
+			want: []string{"base"},
+		},
+		{
+			name: "one worker",
+			opts: api.Options{Runner: api.Runner{RPCServers: "10.0.0.2:50052"}},
+			want: []string{"base", "--rpc", "10.0.0.2:50052"},
+		},
+		{
+			name: "multiple workers, comma-separated, passed through verbatim",
+			opts: api.Options{Runner: api.Runner{RPCServers: "10.0.0.2:50052,10.0.0.3:50052"}},
+			want: []string{"base", "--rpc", "10.0.0.2:50052,10.0.0.3:50052"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := appendRPCArgs([]string{"base"}, tt.opts)
+			if !slices.Equal(got, tt.want) {
+				t.Fatalf("appendRPCArgs = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestAppendLoadModeArgs(t *testing.T) {
 	mmapOff := api.DefaultOptions()
 	mmapOff.UseMMap = testBoolPtr(false)

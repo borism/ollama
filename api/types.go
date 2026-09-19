@@ -593,6 +593,12 @@ type Runner struct {
 	UseMMap         *bool `json:"use_mmap,omitempty"`
 	NumThread       int   `json:"num_thread,omitempty"`
 	DraftNumPredict int   `json:"draft_num_predict,omitempty"`
+	// RPCServers is a comma-separated "host:port,host:port" list of
+	// llama.cpp RPC workers (see tools/rpc in ggml-org/llama.cpp) to spill
+	// layers onto when the model doesn't fit locally. Opt-in, per request
+	// or Modelfile PARAMETER -- passed straight through to llama-server's
+	// own "--rpc" flag and its normal auto placement, not computed here.
+	RPCServers string `json:"rpc_servers,omitempty"`
 }
 
 // EmbedRequest is the request passed to [Client.Embed].
