@@ -38,6 +38,7 @@ func startCluster(ctx context.Context, sched *Scheduler) {
 		SelfDevices: func() []ml.DeviceInfo { return discover.GPUDevices(ctx, nil) },
 		SelfRPCPort: rpcPort,
 		SelfLoad:    sched.clusterLoad,
+		Seeds:       envconfig.ClusterSeeds(),
 	})
 	if err != nil {
 		slog.Warn("cluster: failed to start discovery", "error", err)

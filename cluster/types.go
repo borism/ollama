@@ -77,4 +77,16 @@ type Config struct {
 
 	// SelfLoad returns this instance's own current 0..1 utilization.
 	SelfLoad func() float64
+
+	// Seeds is an optional list of "host:port" discovery-beacon addresses
+	// to unicast our announcement to directly, in addition to the LAN
+	// broadcast (see broadcastAddrs in discovery.go) -- the way to reach a
+	// peer outside this host's broadcast domain (UDP broadcast doesn't
+	// cross a subnet/VLAN boundary). Typically only a head needs seeds
+	// configured, pointing at cross-subnet workers: a worker that learns
+	// about the head via a seeded announcement never needs to reach other
+	// workers back (see the package doc -- hub-shaped, no worker-to-worker
+	// traffic). A seed that fails to resolve is logged and skipped, not
+	// fatal to Start.
+	Seeds []string
 }

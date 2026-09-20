@@ -172,9 +172,26 @@ func broadcastAddrs(port int) []*net.UDPAddr {
 	return addrs
 }
 
+// resolveSeeds resolves Config.Seeds ("host:port" strings) to UDP
+// addresses, logging and skipping any that fail to resolve rather than
+// failing Start outright -- a typo'd or momentarily-unreachable seed
+// shouldn't take down LAN broadcast discovery too.
+func resolveSeeds(seeds []string) []*net.UDPAddr {
+	addrs := make([]*net.UDPAddr, 0, len(seeds))
+	for _, s := range seeds {
+		addr, err := net.ResolveUDPAddr("udp4", s)
+		if err != nil {
+			slog.Warn("cluster: could not resolve seed, skipping", "seed", s, "error", err)
+			continue
+		}
+		addrs = append(addrs, addr)
+	}
+	return addrs
+}
+
 // broadcastLoop periodically encodes and sends our own announcement.
 func broadcastLoop(ctx context.Context, conn *net.UDPConn, cfg Config, t *Table) {
-	dsts := broadcastAddrs(cfg.Port)
+	dsts := append(broadcastAddrs(cfg.Port), resolveSeeds(cfg.Seeds)...)
 
 	ticker := time.NewTicker(cfg.Interval)
 	defer ticker.Stop()

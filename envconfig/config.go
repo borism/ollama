@@ -174,6 +174,25 @@ func Remotes() []string {
 	return r
 }
 
+// ClusterSeeds is a comma-separated "host:port,host:port" list of
+// cluster-discovery beacon addresses to unicast directly to, for reaching
+// peers outside this host's broadcast domain (see cluster.Config.Seeds --
+// UDP broadcast doesn't cross a subnet/VLAN). Only meaningful when Cluster
+// is on. Empty by default: same-subnet broadcast discovery needs no seeds.
+func ClusterSeeds() []string {
+	raw := strings.TrimSpace(Var("OLLAMA_CLUSTER_SEEDS"))
+	if raw == "" {
+		return nil
+	}
+	var seeds []string
+	for _, s := range strings.Split(raw, ",") {
+		if s = strings.TrimSpace(s); s != "" {
+			seeds = append(seeds, s)
+		}
+	}
+	return seeds
+}
+
 func BoolWithDefault(k string) func(defaultValue bool) bool {
 	return func(defaultValue bool) bool {
 		if s := Var(k); s != "" {

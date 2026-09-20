@@ -146,3 +146,22 @@ func TestListenLoopReceivesAnnouncement(t *testing.T) {
 		}
 	}
 }
+
+func TestResolveSeeds(t *testing.T) {
+	addrs := resolveSeeds([]string{"127.0.0.1:11435", "not a valid seed:::", "192.168.1.42:50999"})
+	if len(addrs) != 2 {
+		t.Fatalf("expected 2 resolved seeds (1 invalid skipped), got %d: %v", len(addrs), addrs)
+	}
+	if addrs[0].String() != "127.0.0.1:11435" {
+		t.Errorf("addrs[0] = %v, want 127.0.0.1:11435", addrs[0])
+	}
+	if addrs[1].String() != "192.168.1.42:50999" {
+		t.Errorf("addrs[1] = %v, want 192.168.1.42:50999", addrs[1])
+	}
+}
+
+func TestResolveSeedsEmpty(t *testing.T) {
+	if addrs := resolveSeeds(nil); len(addrs) != 0 {
+		t.Errorf("resolveSeeds(nil) = %v, want empty", addrs)
+	}
+}
