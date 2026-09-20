@@ -922,6 +922,18 @@ type ProcessModelResponse struct {
 	ExpiresAt     time.Time    `json:"expires_at"`
 	SizeVRAM      int64        `json:"size_vram"`
 	ContextLength int          `json:"context_length"`
+	// ClusterPeers is the ollama-cluster RPC peers this model spilled onto
+	// (see docs/cluster.mdx), if any. Their combined size is already
+	// included in SizeVRAM -- this just breaks out how much of it is
+	// local vs. which remote peer.
+	ClusterPeers []ProcessClusterPeer `json:"cluster_peers,omitempty"`
+}
+
+// ProcessClusterPeer is one RPC peer's share of a [ProcessModelResponse]'s
+// VRAM usage.
+type ProcessClusterPeer struct {
+	Addr string `json:"addr"`
+	Size int64  `json:"size"`
 }
 
 type TokenResponse struct {

@@ -1212,18 +1212,42 @@ func ListRunningHandler(cmd *cobra.Command, args []string) error {
 
 	for _, m := range models.Models {
 		if len(args) == 0 || strings.HasPrefix(m.Name, args[0]) {
+			var rpcTotal int64
+			for _, p := range m.ClusterPeers {
+				rpcTotal += p.Size
+			}
+
 			var procStr string
 			switch {
+			case m.SizeVRAM > m.Size || m.Size == 0:
+				procStr = "Unknown"
+			case rpcTotal > 0:
+				// SizeVRAM already includes rpcTotal (see
+				// api.ProcessModelResponse.ClusterPeers) -- split it into
+				// local-GPU vs. RPC so CPU/GPU/RPC always sums to 100 the
+				// same way the two-term case sums to 100 below.
+				cpu := m.Size - m.SizeVRAM
+				cpuPercent := math.Round(float64(cpu) / float64(m.Size) * 100)
+				rpcPercent := math.Round(float64(rpcTotal) / float64(m.Size) * 100)
+				gpuPercent := 100 - cpuPercent - rpcPercent
+				procStr = fmt.Sprintf("%d%%/%d%%/%d%% CPU/GPU/RPC", int(cpuPercent), int(gpuPercent), int(rpcPercent))
 			case m.SizeVRAM == 0:
 				procStr = "100% CPU"
 			case m.SizeVRAM == m.Size:
 				procStr = "100% GPU"
-			case m.SizeVRAM > m.Size || m.Size == 0:
-				procStr = "Unknown"
 			default:
 				sizeCPU := m.Size - m.SizeVRAM
 				cpuPercent := math.Round(float64(sizeCPU) / float64(m.Size) * 100)
 				procStr = fmt.Sprintf("%d%%/%d%% CPU/GPU", int(cpuPercent), int(100-cpuPercent))
+			}
+
+			clusterStr := "-"
+			if len(m.ClusterPeers) > 0 {
+				parts := make([]string, len(m.ClusterPeers))
+				for i, p := range m.ClusterPeers {
+					parts[i] = fmt.Sprintf("%s (%s)", p.Addr, format.HumanBytes(p.Size))
+				}
+				clusterStr = strings.Join(parts, ", ")
 			}
 
 			var until string
@@ -1234,12 +1258,12 @@ func ListRunningHandler(cmd *cobra.Command, args []string) error {
 				until = format.HumanTime(m.ExpiresAt, "Never")
 			}
 			ctxStr := strconv.Itoa(m.ContextLength)
-			data = append(data, []string{m.Name, m.Digest[:12], format.HumanBytes(m.Size), procStr, ctxStr, until})
+			data = append(data, []string{m.Name, m.Digest[:12], format.HumanBytes(m.Size), procStr, clusterStr, ctxStr, until})
 		}
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"NAME", "ID", "SIZE", "PROCESSOR", "CONTEXT", "UNTIL"})
+	table.SetHeader([]string{"NAME", "ID", "SIZE", "PROCESSOR", "CLUSTER", "CONTEXT", "UNTIL"})
 	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 	table.SetAlignment(tablewriter.ALIGN_LEFT)
 	table.SetHeaderLine(false)

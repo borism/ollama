@@ -1776,6 +1776,37 @@ type loadedModel struct {
 	sizeVRAM      int64
 	contextLength int
 	expiresAt     time.Time
+	clusterPeers  []clusterPeerUsage
+}
+
+// clusterPeerUsage is how much of a loaded model's VRAM landed on one
+// ollama-cluster RPC peer (see cluster.SelectRPCServers/api.Options.RPCServers).
+type clusterPeerUsage struct {
+	addr string
+	size int64
+}
+
+// clusterUsageFromRPC pairs api.Options.RPCServers (the "host:port,..." list
+// passed to llama-server's --rpc, in order) with llm.LlamaServer.RPCVRAM's
+// per-device byte counts. llama.cpp names RPC devices RPC0, RPC1, ... in the
+// order they're listed on --rpc, so index i of rpcServers is "RPCi" --
+// pulled into its own function so this pairing is unit-testable without a
+// live runner.
+func clusterUsageFromRPC(rpcServers string, rpcVRAM map[string]uint64) []clusterPeerUsage {
+	if rpcServers == "" {
+		return nil
+	}
+	var usage []clusterPeerUsage
+	for i, addr := range strings.Split(rpcServers, ",") {
+		addr = strings.TrimSpace(addr)
+		if addr == "" {
+			continue
+		}
+		if size := rpcVRAM[fmt.Sprintf("RPC%d", i)]; size > 0 {
+			usage = append(usage, clusterPeerUsage{addr: addr, size: int64(size)})
+		}
+	}
+	return usage
 }
 
 // loadedModels returns a snapshot of the currently loaded models for status
@@ -1809,6 +1840,9 @@ func (s *Scheduler) loadedModels() []loadedModel {
 			total, vram := r.llama.MemorySize()
 			lm.size = int64(total)
 			lm.sizeVRAM = int64(vram)
+			if r.Options != nil {
+				lm.clusterPeers = clusterUsageFromRPC(r.Options.RPCServers, r.llama.RPCVRAM())
+			}
 		}
 		// The scheduler waits to set expiresAt, so a model that is still
 		// loading may have the zero value. Estimate expiration from the

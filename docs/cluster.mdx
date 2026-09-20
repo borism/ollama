@@ -68,6 +68,21 @@ sharing (`SHARING no`) still shows up with its devices — useful for
 seeing what's on the LAN even before it opts in — but placement will
 never pick it.
 
+## Checking a running model's spillover
+
+`ollama ps` gains a `CLUSTER` column and a third `PROCESSOR` term once a
+loaded model has spilled onto a peer:
+
+```
+NAME             ID             SIZE     PROCESSOR                CLUSTER                      CONTEXT    UNTIL
+qwen3.8:27b      3f8c1a9d2e40   27 GB    0%/45%/55% CPU/GPU/RPC   192.0.2.12:50052 (14.9 GB)   131072     4 minutes from now
+```
+
+`PROCESSOR`'s `CPU/GPU/RPC` split adds up to 100% of the model's size;
+`CLUSTER` breaks the RPC share out by peer address and how many bytes each
+one is holding. No spillover: `CLUSTER` reads `-` and `PROCESSOR` stays the
+plain `CPU/GPU` (or `100% CPU`/`100% GPU`) form it always had.
+
 ## Environment variables
 
 | Variable | Default | Purpose |

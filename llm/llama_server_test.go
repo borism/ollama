@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -3590,6 +3591,28 @@ func TestVRAMByGPU(t *testing.T) {
 	gotUnknown := runner.VRAMByGPU(ml.DeviceID{ID: "9", Library: "CUDA"})
 	if gotUnknown != 0 {
 		t.Errorf("VRAMByGPU(unknown) = %d, want 0", gotUnknown)
+	}
+}
+
+func TestRPCVRAM(t *testing.T) {
+	runner := &llamaServerRunner{
+		vramByDevice: map[string]uint64{
+			"CUDA0": 1000 * 1024 * 1024,
+			"RPC0":  2000 * 1024 * 1024,
+			"RPC1":  3000 * 1024 * 1024,
+		},
+	}
+
+	got := runner.RPCVRAM()
+	want := map[string]uint64{"RPC0": 2000 * 1024 * 1024, "RPC1": 3000 * 1024 * 1024}
+	if !maps.Equal(got, want) {
+		t.Errorf("RPCVRAM() = %v, want %v", got, want)
+	}
+
+	// No RPC devices at all -> nil, not an empty map (mirrors how an unused
+	// map field would read before any buffer size lines were parsed).
+	if got := (&llamaServerRunner{vramByDevice: map[string]uint64{"CUDA0": 1}}).RPCVRAM(); got != nil {
+		t.Errorf("RPCVRAM() = %v, want nil", got)
 	}
 }
 

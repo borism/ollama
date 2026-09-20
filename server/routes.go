@@ -2311,6 +2311,11 @@ func (s *Server) PsHandler(c *gin.Context) {
 			QuantizationLevel: m.Config.FileType,
 		}
 
+		var clusterPeers []api.ProcessClusterPeer
+		for _, p := range v.clusterPeers {
+			clusterPeers = append(clusterPeers, api.ProcessClusterPeer{Addr: p.addr, Size: p.size})
+		}
+
 		models = append(models, api.ProcessModelResponse{
 			Model:         displayName,
 			Name:          displayName,
@@ -2320,6 +2325,7 @@ func (s *Server) PsHandler(c *gin.Context) {
 			Details:       modelDetails,
 			ExpiresAt:     v.expiresAt,
 			ContextLength: v.contextLength,
+			ClusterPeers:  clusterPeers,
 		})
 	}
 

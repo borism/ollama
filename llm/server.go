@@ -69,6 +69,7 @@ type LlamaServer interface {
 	Close() error
 	MemorySize() (total, vram uint64)
 	VRAMByGPU(id ml.DeviceID) uint64
+	RPCVRAM() map[string]uint64
 	Pid() int
 	GetPort() int
 	GetDeviceInfos(ctx context.Context) []ml.DeviceInfo

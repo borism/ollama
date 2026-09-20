@@ -522,6 +522,12 @@ func (c *Client) VRAMByGPU(id ml.DeviceID) uint64 {
 	return c.currentMemory()
 }
 
+// RPCVRAM implements llm.LlamaServer. The MLX runner doesn't support
+// ollama-cluster RPC spillover, so it never has any.
+func (c *Client) RPCVRAM() map[string]uint64 {
+	return nil
+}
+
 var _ llm.LlamaServer = (*Client)(nil)
 
 // setEnv sets or replaces an environment variable in cmd.Env.

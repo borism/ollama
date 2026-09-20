@@ -2111,6 +2111,7 @@ type mockLlm struct {
 	totalSize         uint64
 	contextLength     int
 	vramByGPU         map[ml.DeviceID]uint64
+	rpcVRAM           map[string]uint64
 
 	// loadErr, if non-nil, is returned from Load() to simulate a post-spawn
 	// load failure (e.g. llama-server crashing due to under-predicted VRAM).
@@ -2177,6 +2178,7 @@ func (s *mockLlm) Close() error {
 
 func (s *mockLlm) MemorySize() (uint64, uint64)                       { return s.totalSize, s.vramSize }
 func (s *mockLlm) VRAMByGPU(id ml.DeviceID) uint64                    { return s.vramByGPU[id] }
+func (s *mockLlm) RPCVRAM() map[string]uint64                         { return s.rpcVRAM }
 func (s *mockLlm) Pid() int                                           { return -1 }
 func (s *mockLlm) GetPort() int                                       { return -1 }
 func (s *mockLlm) GetDeviceInfos(ctx context.Context) []ml.DeviceInfo { return nil }
