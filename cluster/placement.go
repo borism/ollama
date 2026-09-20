@@ -49,8 +49,8 @@ func usablePeer(p Peer) bool {
 // downstream needs to change). Pure function: no network calls, just a
 // decision over the snapshot it's given.
 //
-// Memory-proportional only (the project's planner.py `best_device`
-// fallback mode, ported): peers are ranked by free memory and added
+// Memory-proportional only (a simple greedy fallback, not a novel
+// algorithm): peers are ranked by free memory and added
 // greedily until the shortfall is covered. No speed-aware water-fill --
 // that needs bench data this function doesn't have.
 func SelectRPCServers(gpus []ml.DeviceInfo, predicted uint64, peers []Peer, opts api.Options) api.Options {

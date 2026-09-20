@@ -248,8 +248,9 @@ var (
 	// Cluster turns on LAN autodiscovery of other ollama-cluster instances
 	// (see cluster.Start) and, unless ClusterShare is set false, donating
 	// this instance's spare GPU capacity as an RPC worker for them
-	// (llm.StartRPCWorker). Opt-in: RPC is documented insecure upstream
-	// (tools/rpc/README.md), this assumes a trusted LAN.
+	// (llm.StartRPCWorker). Opt-in: llama.cpp's RPC backend is documented
+	// insecure upstream (tools/rpc/README.md in ggml-org/llama.cpp), this
+	// assumes a trusted LAN.
 	Cluster = Bool("OLLAMA_CLUSTER")
 	// ClusterShare controls whether this instance advertises spare GPU
 	// capacity to the cluster; only meaningful when Cluster is on. Default

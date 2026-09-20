@@ -134,8 +134,8 @@ func selfAnnouncement(cfg Config) announcement {
 // broadcastAddrs returns the subnet-directed broadcast address (e.g.
 // 192.168.1.255) of every up, non-loopback IPv4 interface, plus the global
 // limited-broadcast address 255.255.255.255 as a best-effort fallback.
-// Confirmed by hand against a real network: some LANs/routers deliver subnet-directed broadcast
-// but silently drop 255.255.255.255, so 255.255.255.255 alone isn't enough
+// Confirmed by hand against a real network: some LANs/routers deliver
+// subnet-directed broadcast but silently drop 255.255.255.255, so that alone isn't enough
 // -- and a multi-homed host (more than one NIC on the LAN) needs its own
 // address computed per interface, not just the default route's.
 func broadcastAddrs(port int) []*net.UDPAddr {

@@ -649,8 +649,8 @@ func appendMainGPUArgs(params []string, opts api.Options) []string {
 }
 
 // appendRPCArgs opts a model into llama.cpp RPC spillover (see tools/rpc in
-// ggml-org/llama.cpp) -- the project-style: static, per-request choice, no
-// scheduler awareness of remote capacity. -ngl is deliberately left alone
+// ggml-org/llama.cpp). Static, per-request choice, no scheduler awareness
+// of remote capacity. -ngl is deliberately left alone
 // (see appendLoadModeArgs / the NumGPU==-1 default above): llama-server's
 // own auto placement folds the RPC workers into the same proportional split
 // it already gives local multi-GPU, so there's nothing to compute here.
