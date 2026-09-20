@@ -22,8 +22,6 @@ import (
 	"testing"
 	"unicode"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/go-cmp/cmp"
 	"github.com/borism/ollama-cluster/api"
 	"github.com/borism/ollama-cluster/fs/gguf"
 	gguftest "github.com/borism/ollama-cluster/internal/testutil/gguf"
@@ -31,6 +29,8 @@ import (
 	"github.com/borism/ollama-cluster/openai"
 	"github.com/borism/ollama-cluster/types/model"
 	"github.com/borism/ollama-cluster/version"
+	"github.com/gin-gonic/gin"
+	"github.com/google/go-cmp/cmp"
 )
 
 func createTestFile(t *testing.T, name string) (string, string) {

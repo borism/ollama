@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/borism/ollama-cluster/api"
 	gguftest "github.com/borism/ollama-cluster/internal/testutil/gguf"
 	"github.com/borism/ollama-cluster/llm"
 	"github.com/borism/ollama-cluster/ml"
+	"github.com/gin-gonic/gin"
 )
 
 func TestGenerateDebugRenderOnly(t *testing.T) {

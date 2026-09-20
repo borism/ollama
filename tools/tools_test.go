@@ -5,8 +5,8 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/borism/ollama-cluster/api"
+	"github.com/google/go-cmp/cmp"
 )
 
 // argsComparer provides cmp options for comparing ToolCallFunctionArguments by value (order-insensitive)

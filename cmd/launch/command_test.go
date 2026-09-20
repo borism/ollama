@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/borism/ollama-cluster/cmd/config"
+	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/cobra"
 )
 

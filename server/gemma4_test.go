@@ -3,8 +3,8 @@ package server
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/borism/ollama-cluster/model/parsers"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestResolveGemma4Renderer(t *testing.T) {

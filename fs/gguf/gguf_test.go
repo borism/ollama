@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/borism/ollama-cluster/fs/gguf"
 	gguftest "github.com/borism/ollama-cluster/internal/testutil/gguf"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func createBinFile(tb testing.TB) string {

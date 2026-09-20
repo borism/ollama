@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/borism/ollama-cluster/logutil"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestHost(t *testing.T) {

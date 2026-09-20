@@ -15,9 +15,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/borism/ollama-cluster/app/types/not"
 	"github.com/borism/ollama-cluster/internal/onboarding"
+	"github.com/google/uuid"
 )
 
 type File struct {

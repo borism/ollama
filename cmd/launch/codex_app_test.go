@@ -14,12 +14,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/borism/ollama-cluster/api"
 	"github.com/borism/ollama-cluster/cmd/internal/fileutil"
 	"github.com/borism/ollama-cluster/internal/proxy"
 	"github.com/borism/ollama-cluster/model/renderers"
 	"github.com/borism/ollama-cluster/types/model"
+	"github.com/google/go-cmp/cmp"
 )
 
 func withCodexAppPlatform(t *testing.T, goos string) {

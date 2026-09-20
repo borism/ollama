@@ -21,7 +21,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/borism/ollama-cluster/app/auth"
 	"github.com/borism/ollama-cluster/app/logrotate"
 	"github.com/borism/ollama-cluster/app/server"
@@ -30,6 +29,7 @@ import (
 	"github.com/borism/ollama-cluster/app/ui"
 	"github.com/borism/ollama-cluster/app/updater"
 	"github.com/borism/ollama-cluster/app/version"
+	"github.com/google/uuid"
 )
 
 var (

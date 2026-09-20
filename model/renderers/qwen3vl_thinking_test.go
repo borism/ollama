@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/borism/ollama-cluster/api"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestQwen3VLThinkingRenderer(t *testing.T) {

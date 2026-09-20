@@ -20,8 +20,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/klauspost/compress/zstd"
 	"github.com/borism/ollama-cluster/types/model"
+	"github.com/klauspost/compress/zstd"
 )
 
 const (

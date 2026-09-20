@@ -14,11 +14,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/borism/ollama-cluster/api"
 	internalcloud "github.com/borism/ollama-cluster/internal/cloud"
 	"github.com/borism/ollama-cluster/middleware"
 	"github.com/borism/ollama-cluster/version"
+	"github.com/gin-gonic/gin"
 )
 
 func TestStatusHandler(t *testing.T) {

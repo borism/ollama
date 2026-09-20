@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/borism/ollama-cluster/api"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestMinistralParserStreaming(t *testing.T) {

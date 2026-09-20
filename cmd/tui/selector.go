@@ -5,9 +5,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/borism/ollama-cluster/cmd/launch"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/borism/ollama-cluster/cmd/launch"
 )
 
 var (

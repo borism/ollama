@@ -21,7 +21,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/borism/ollama-cluster/api"
 	"github.com/borism/ollama-cluster/app/server"
 	"github.com/borism/ollama-cluster/app/store"
@@ -35,6 +34,7 @@ import (
 	"github.com/borism/ollama-cluster/envconfig"
 	"github.com/borism/ollama-cluster/manifest"
 	"github.com/borism/ollama-cluster/types/model"
+	"github.com/google/uuid"
 	_ "github.com/tkrajina/typescriptify-golang-structs/typescriptify"
 )
 

@@ -3,8 +3,8 @@ package renderers
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/borism/ollama-cluster/api"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestGLM46Renderer(t *testing.T) {

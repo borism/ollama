@@ -17,10 +17,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/klauspost/compress/zstd"
 	"github.com/borism/ollama-cluster/model/renderers"
 	"github.com/borism/ollama-cluster/openai"
 	modelpkg "github.com/borism/ollama-cluster/types/model"
+	"github.com/klauspost/compress/zstd"
 )
 
 func TestCodexDesktopRoutesCatalogModelToOllamaAndStripsCredentials(t *testing.T) {

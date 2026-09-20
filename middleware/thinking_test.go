@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	"github.com/borism/ollama-cluster/api"
 	"github.com/borism/ollama-cluster/types/model"
+	"github.com/gin-gonic/gin"
 )
 
 func TestThinkingCompatibilityScope(t *testing.T) {

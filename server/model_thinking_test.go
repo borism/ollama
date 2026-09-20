@@ -9,12 +9,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	"github.com/borism/ollama-cluster/api"
 	"github.com/borism/ollama-cluster/llm"
 	"github.com/borism/ollama-cluster/middleware"
 	"github.com/borism/ollama-cluster/template"
 	"github.com/borism/ollama-cluster/types/model"
+	"github.com/gin-gonic/gin"
 )
 
 func TestThinkingInputErrors(t *testing.T) {

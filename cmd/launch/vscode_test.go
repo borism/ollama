@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"testing"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/borism/ollama-cluster/cmd/internal/fileutil"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestVSCodeIntegration(t *testing.T) {

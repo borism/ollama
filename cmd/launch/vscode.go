@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/borism/ollama-cluster/api"
 	"github.com/borism/ollama-cluster/cmd/internal/fileutil"
 	"github.com/borism/ollama-cluster/envconfig"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // VSCode implements Runner and Editor for Visual Studio Code integration.

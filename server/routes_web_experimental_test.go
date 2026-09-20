@@ -10,9 +10,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	internalcloud "github.com/borism/ollama-cluster/internal/cloud"
 	"github.com/borism/ollama-cluster/version"
+	"github.com/gin-gonic/gin"
 )
 
 type webExperimentalUpstreamCapture struct {

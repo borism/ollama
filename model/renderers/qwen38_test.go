@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/borism/ollama-cluster/api"
 	"github.com/borism/ollama-cluster/mlxrunner/tokenizer"
+	"github.com/google/go-cmp/cmp"
 )
 
 const (
