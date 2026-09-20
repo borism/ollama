@@ -4,18 +4,16 @@
   </a>
 </p>
 
-# Ollama
+# Ollama Cluster
 
-Start building with open models.
+Ollama, with LAN-wide GPU pooling: a fork that autodiscovers other instances
+on your network and spills model layers onto their spare GPUs via llama.cpp
+RPC when one machine's VRAM isn't enough.
 
-## Cluster (this fork, experimental)
+## Cluster mode (experimental)
 
-[`borism/ollama-cluster`](https://github.com/borism/ollama-cluster) is a fork
-of Ollama that adds opt-in LAN autodiscovery and automatic
-[llama.cpp RPC](https://github.com/ggml-org/llama.cpp/blob/master/tools/rpc/README.md)
-spillover: when a model doesn't fit in one machine's VRAM, layers spill onto
-a peer's spare GPU automatically — no manual `--rpc` flags, no static peer
-list.
+Uses [llama.cpp RPC](https://github.com/ggml-org/llama.cpp/blob/master/tools/rpc/README.md)
+under the hood — no manual `--rpc` flags, no static peer list.
 
 ```shell
 OLLAMA_CLUSTER=1 ollama serve
@@ -37,6 +35,19 @@ unchanged.
   the same time.
 - **Insecure by design, same as upstream llama.cpp RPC.** Only enable this
   on a trusted LAN or VPN (Tailscale, WireGuard), never on an open network.
+
+`ollama cluster ls` lists who's on the LAN — peers report whatever backend
+their own `ollama serve` was built with, so a cluster can mix CUDA, Vulkan
+and Metal machines freely (RPC only moves tensors, not driver-specific code):
+
+```
+ID                ADDRESS        SHARING    DEVICES                    LOAD    LATENCY    LAST SEEN
+9f3a1c7e2b804d61  192.0.2.11     yes        CUDA0 (14.2 GiB free)      12%     4ms        3 seconds ago
+0c88e4a1f5d23b90  192.0.2.12     yes        Vulkan0 (11.8 GiB free)    0%      9ms        8 seconds ago
+5e21bb4f0a9c7712  192.0.2.13     no         Metal0 (9.0 GiB free)      45%     -          a minute ago
+```
+
+(addresses above are placeholders, not real hosts.)
 
 See [`docs/cluster.mdx`](docs/cluster.mdx) for environment variables,
 per-request overrides, and current limitations.
