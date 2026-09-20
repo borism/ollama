@@ -611,13 +611,19 @@ type Runner struct {
 	// RPCServers is set explicitly.
 	RPCPlacement string `json:"rpc_placement,omitempty"`
 	// TensorSplit is a manual override for how much of the model each
-	// device gets (local devices first, then each host in RPCServers
-	// order), passed straight through to llama-server's own
-	// --tensor-split (comma-separated proportions, e.g. "3,1"). Empty
-	// leaves it to llama.cpp's automatic --fit, proportional to free
-	// memory (llama.cpp's default). Independent of RPCServers/RPCAuto/RPCPlacement
-	// -- this only overrides the split ratio, not which peers are used,
-	// and only takes effect alongside a non-empty RPCServers (manual or
+	// device gets, passed straight through to llama-server's own
+	// --tensor-split (comma-separated proportions, e.g. "3,1"). Device
+	// order is llama.cpp's own, NOT "local first" -- since Ollama never
+	// passes --device, every RPCServers entry sorts before every local
+	// GPU (src/llama.cpp's llama_prepare_model_devices: "add RPC servers
+	// at the front of the list to minimize network transfers"), so with
+	// one local GPU and one RPC peer, TensorSplit[0] is the peer and
+	// TensorSplit[1] is local -- confirmed against a real load
+	// (2026-09-20). Empty leaves the split
+	// to llama.cpp's automatic --fit, proportional to free memory
+	// (llama.cpp's default). Independent of RPCServers/RPCAuto/RPCPlacement --
+	// this only overrides the split ratio, not which peers are used, and
+	// only takes effect alongside a non-empty RPCServers (manual or
 	// auto-selected).
 	TensorSplit string `json:"tensor_split,omitempty"`
 }
