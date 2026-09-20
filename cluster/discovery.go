@@ -1,0 +1,206 @@
+package cluster
+
+import (
+	"context"
+	"crypto/rand"
+	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"log/slog"
+	"net"
+	"sync"
+	"time"
+
+	"github.com/ollama/ollama/ml"
+)
+
+// RPCProtoMajor/RPCProtoMinor are the RPC_PROTO_MAJOR_VERSION/
+// RPC_PROTO_MINOR_VERSION this build's vendored llama.cpp speaks
+// (ggml/include/ggml-rpc.h). Bump these if the vendored llama.cpp pin in
+// this fork changes. Note: cluster/placement.go independently defines the same
+// two constants with the same names/values -- expected, they'll dedupe at
+// merge time.
+const (
+	RPCProtoMajor = 6
+	RPCProtoMinor = 0
+)
+
+// announcement is the JSON payload broadcast on the wire. It's the subset
+// of Peer this node can self-report; Addr and LastSeen are filled in by the
+// receiver, not the sender.
+type announcement struct {
+	ID         string          `json:"id"`
+	RPCPort    int             `json:"rpc_port"`
+	Devices    []ml.DeviceInfo `json:"devices"`
+	ProtoMajor int             `json:"proto_major"`
+	ProtoMinor int             `json:"proto_minor"`
+	Load       float64         `json:"load"`
+}
+
+// Table is a thread-safe, live set of peers seen via discovery beacons.
+type Table struct {
+	mu    sync.Mutex
+	self  Peer
+	peers map[string]Peer
+	ttl   time.Duration
+}
+
+// Self returns our own current advertised state, for debugging/logging.
+func (t *Table) Self() Peer {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.self
+}
+
+// Peers returns live peers, excluding stale ones per Config.TTL and
+// excluding our own ID.
+func (t *Table) Peers() []Peer {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	now := time.Now()
+	peers := make([]Peer, 0, len(t.peers))
+	for _, p := range t.peers {
+		if !p.Stale(now, t.ttl) {
+			peers = append(peers, p)
+		}
+	}
+	return peers
+}
+
+func (t *Table) updateSelf(p Peer) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.self = p
+}
+
+func (t *Table) observe(p Peer) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.peers[p.ID] = p
+}
+
+// randomID returns a random hex string for use as a self ID, for
+// convenience when Config.SelfID is left empty.
+func randomID() string {
+	var b [8]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		// crypto/rand.Read on any real platform doesn't fail; fall back
+		// to something unique-ish rather than erroring Start out.
+		binary.BigEndian.PutUint64(b[:], uint64(time.Now().UnixNano()))
+	}
+	return fmt.Sprintf("%x", b)
+}
+
+// Start launches the discovery beacon: one goroutine periodically
+// broadcasts our own state over UDP, one listens for peers' broadcasts and
+// updates the returned Table. Both stop when ctx is canceled.
+func Start(ctx context.Context, cfg Config) (*Table, error) {
+	if cfg.SelfID == "" {
+		cfg.SelfID = randomID()
+	}
+
+	conn, err := net.ListenUDP("udp4", &net.UDPAddr{Port: cfg.Port})
+	if err != nil {
+		return nil, fmt.Errorf("cluster: listen udp :%d: %w", cfg.Port, err)
+	}
+
+	t := &Table{
+		peers: make(map[string]Peer),
+		ttl:   cfg.TTL,
+	}
+
+	go broadcastLoop(ctx, conn, cfg, t)
+	go listenLoop(ctx, conn, cfg, t)
+
+	go func() {
+		<-ctx.Done()
+		conn.Close()
+	}()
+
+	return t, nil
+}
+
+func selfAnnouncement(cfg Config) announcement {
+	return announcement{
+		ID:         cfg.SelfID,
+		RPCPort:    cfg.SelfRPCPort(),
+		Devices:    cfg.SelfDevices(),
+		ProtoMajor: RPCProtoMajor,
+		ProtoMinor: RPCProtoMinor,
+		Load:       cfg.SelfLoad(),
+	}
+}
+
+// broadcastLoop periodically encodes and sends our own announcement.
+func broadcastLoop(ctx context.Context, conn *net.UDPConn, cfg Config, t *Table) {
+	dst := &net.UDPAddr{IP: net.IPv4bcast, Port: cfg.Port}
+
+	ticker := time.NewTicker(cfg.Interval)
+	defer ticker.Stop()
+
+	send := func() {
+		a := selfAnnouncement(cfg)
+		t.updateSelf(Peer{
+			ID:         a.ID,
+			RPCPort:    a.RPCPort,
+			Devices:    a.Devices,
+			ProtoMajor: a.ProtoMajor,
+			ProtoMinor: a.ProtoMinor,
+			Load:       a.Load,
+			LastSeen:   time.Now(),
+		})
+		buf, err := json.Marshal(a)
+		if err != nil {
+			slog.Warn("cluster: encode announcement", "error", err)
+			return
+		}
+		if _, err := conn.WriteToUDP(buf, dst); err != nil {
+			slog.Debug("cluster: broadcast announcement", "error", err)
+		}
+	}
+
+	send()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			send()
+		}
+	}
+}
+
+// listenLoop reads incoming beacons and updates the table, ignoring our own.
+func listenLoop(ctx context.Context, conn *net.UDPConn, cfg Config, t *Table) {
+	buf := make([]byte, 64*1024)
+	for {
+		n, src, err := conn.ReadFromUDP(buf)
+		if err != nil {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				slog.Debug("cluster: read udp", "error", err)
+				return
+			}
+		}
+		var a announcement
+		if err := json.Unmarshal(buf[:n], &a); err != nil {
+			slog.Debug("cluster: decode announcement", "error", err, "src", src)
+			continue
+		}
+		if a.ID == "" || a.ID == cfg.SelfID {
+			continue
+		}
+		t.observe(Peer{
+			ID:         a.ID,
+			Addr:       src.IP.String(),
+			RPCPort:    a.RPCPort,
+			Devices:    a.Devices,
+			ProtoMajor: a.ProtoMajor,
+			ProtoMinor: a.ProtoMinor,
+			Load:       a.Load,
+			LastSeen:   time.Now(),
+		})
+	}
+}
