@@ -42,29 +42,34 @@ jobs:
           echo vendorsha=$(cat LLAMA_CPP_VERSION)-$(cat MLX_VERSION)-$(cat MLX_C_VERSION) | tee -a $GITHUB_OUTPUT
 
   darwin-build:
-    runs-on: macos-26-xlarge
+    # Self-hosted: an ephemeral Tart VM (Apple Virtualization.framework) on
+    # personal hardware, cloned fresh per run and destroyed after -- see
+    # docs/mac-ci-runner-setup.md. Avoids GitHub's paid macos-26-xlarge
+    # runner. SECURITY: this repo is public -- the "tart-ephemeral" label
+    # must never be attached to a job triggered by pull_request or
+    # pull_request_target (only tag pushes / workflow_dispatch, both
+    # requiring push access), or anyone forking this repo could run
+    # arbitrary code on that machine via a PR.
+    runs-on: [self-hosted, macOS, tart-ephemeral]
     environment: release
     needs: setup-environment
     env:
       GOFLAGS: ${{ needs.setup-environment.outputs.GOFLAGS }}
       VERSION: ${{ needs.setup-environment.outputs.VERSION }}
-      DEVELOPER_DIR: /Applications/Xcode_26.4.1.app/Contents/Developer
       CGO_CFLAGS: '-mmacosx-version-min=14.0 -O3'
       CGO_CXXFLAGS: '-mmacosx-version-min=14.0 -O3'
       CGO_LDFLAGS: '-mmacosx-version-min=14.0 -O3'
     steps:
       - uses: actions/checkout@v4
-      - name: Select Xcode 26.4.1
+      - name: Verify build toolchain
+        # No pinned Xcode path here -- unlike a shared GitHub-hosted image
+        # with several Xcodes side by side, this is one dedicated machine
+        # with exactly one Xcode installed (docs/mac-ci-runner-setup.md
+        # step 4); whatever `xcode-select` already points at is the one to
+        # use. This step is a sanity check, not a selector.
         shell: bash
         run: |
           set -euo pipefail
-          if [ ! -d "${DEVELOPER_DIR}" ]; then
-            echo "Missing ${DEVELOPER_DIR}"
-            ls -1 /Applications | grep '^Xcode' || true
-            exit 1
-          fi
-
-          sudo xcode-select -s "${DEVELOPER_DIR}"
           sw_vers
           xcodebuild -version
           xcrun --sdk macosx --show-sdk-version

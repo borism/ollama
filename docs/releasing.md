@@ -17,7 +17,11 @@ How `.github/workflows/release.yaml` and `scripts/install.sh` work for
   `scripts/build_darwin.sh build package` -- deliberately skips `sign`
   (needs an Apple Developer ID + notarization secrets this fork doesn't
   have) and `app` (the signed menu-bar .app; needs npm, and Gatekeeper
-  would refuse it unsigned anyway regardless).
+  would refuse it unsigned anyway regardless). Runs on a **self-hosted**
+  ephemeral Tart VM on personal hardware, not GitHub's paid
+  `macos-26-xlarge` runner -- see `docs/mac-ci-runner-setup.md` for the
+  one-time setup and the security scoping this requires (this repo is
+  public).
 - **No Windows.** Upstream's `windows-depends`/`windows-build`/
   `windows-app` jobs (384 lines) needed a Windows Authenticode cert and
   Google KMS signing credentials; dropped rather than left broken.
@@ -83,10 +87,12 @@ so a partial failure leaves nothing to clean up beyond the tag itself.
 
 ## Known gaps found by actually running this
 
-- `macos-26-xlarge` is a paid large runner -- `darwin-build` fails
-  immediately with a billing error if the account's spending limit or
-  payment method isn't in order. Not something the workflow can detect
-  or work around; check GitHub billing settings.
+- Originally ran `darwin-build` on GitHub's `macos-26-xlarge` -- a paid
+  large runner that fails immediately with a billing error if the
+  account's spending limit or payment method isn't in order, and not
+  something a workflow can detect or work around. Replaced with a
+  self-hosted ephemeral Tart VM (`docs/mac-ci-runner-setup.md`) instead
+  of chasing the billing issue.
 - `cmake/local.cmake`'s `ollama-go` target bakes its own `-ldflags` from
   the CMake variable `OLLAMA_VERSION` -- it does **not** read the
   `GOFLAGS` env var the way a plain `go build` would. Any new build
