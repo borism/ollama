@@ -83,6 +83,30 @@ qwen3.8:27b      3f8c1a9d2e40   27 GB    0%/45%/55% CPU/GPU/RPC   192.0.2.12:500
 one is holding. No spillover: `CLUSTER` reads `-` and `PROCESSOR` stays the
 plain `CPU/GPU` (or `100% CPU`/`100% GPU`) form it always had.
 
+## When it still doesn't fit
+
+Cluster mode doesn't guarantee the model fits on GPUs at all — if local VRAM
+plus every peer's spare memory still isn't enough, the remaining layers fall
+back to CPU, exactly like a single machine with no cluster peers.
+
+Nothing has to special-case this: an RPC peer is just another entry in
+llama.cpp's own device list (remote devices become ordinary ggml
+devices). Peer selection doesn't try to guarantee full coverage
+either — if the shortfall can't be fully covered, it just uses every
+peer it can (`greedy` adds them all; `waterfill` converges to every peer
+maxed out at its own cap) and hands that list to `llama-server`. From
+there, `llama-server`'s own `--fit` decides, at actual load time and with
+real free-memory numbers, how many layers fit across local GPU(s) + every
+RPC peer + CPU combined — the same layer-placement logic that already runs
+with zero cluster peers.
+
+One deliberate exception: a peer with less than 2 GiB of spare memory is
+skipped entirely, even if it could hold a layer or two — not worth a
+network hop for that little. That slice goes to CPU too.
+
+A non-zero `CPU` share in `ollama ps` (see above) while cluster mode is on
+is the direct, visible confirmation this happened — not a bug.
+
 ## Environment variables
 
 | Variable | Default | Purpose |
