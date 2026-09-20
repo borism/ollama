@@ -44,4 +44,34 @@ func startCluster(ctx context.Context, sched *Scheduler) {
 		return
 	}
 	sched.clusterTable = table
+	go logClusterPeers(ctx, table)
+}
+
+// logClusterPeers is operability, not correctness: cluster.Table has no
+// on-change hook, so this just polls Peers() -- fine at a 10s cadence, only
+// running when OLLAMA_CLUSTER=1.
+func logClusterPeers(ctx context.Context, table *cluster.Table) {
+	seen := map[string]bool{}
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			now := map[string]bool{}
+			for _, p := range table.Peers() {
+				now[p.ID] = true
+				if !seen[p.ID] {
+					slog.Info("cluster: peer discovered", "id", p.ID, "addr", p.Addr, "rpc_port", p.RPCPort, "devices", len(p.Devices))
+				}
+			}
+			for id := range seen {
+				if !now[id] {
+					slog.Info("cluster: peer expired", "id", id)
+				}
+			}
+			seen = now
+		}
+	}
 }
