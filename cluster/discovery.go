@@ -131,9 +131,50 @@ func selfAnnouncement(cfg Config) announcement {
 	}
 }
 
+// broadcastAddrs returns the subnet-directed broadcast address (e.g.
+// 192.168.1.255) of every up, non-loopback IPv4 interface, plus the global
+// limited-broadcast address 255.255.255.255 as a best-effort fallback.
+// Confirmed by hand against a real network: some LANs/routers deliver subnet-directed broadcast
+// but silently drop 255.255.255.255, so 255.255.255.255 alone isn't enough
+// -- and a multi-homed host (more than one NIC on the LAN) needs its own
+// address computed per interface, not just the default route's.
+func broadcastAddrs(port int) []*net.UDPAddr {
+	addrs := []*net.UDPAddr{{IP: net.IPv4bcast, Port: port}}
+
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return addrs
+	}
+	for _, iface := range ifaces {
+		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 || iface.Flags&net.FlagBroadcast == 0 {
+			continue
+		}
+		ifaceAddrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, a := range ifaceAddrs {
+			ipnet, ok := a.(*net.IPNet)
+			if !ok {
+				continue
+			}
+			ip4 := ipnet.IP.To4()
+			if ip4 == nil {
+				continue
+			}
+			bcast := make(net.IP, 4)
+			for i := range ip4 {
+				bcast[i] = ip4[i] | ^ipnet.Mask[i]
+			}
+			addrs = append(addrs, &net.UDPAddr{IP: bcast, Port: port})
+		}
+	}
+	return addrs
+}
+
 // broadcastLoop periodically encodes and sends our own announcement.
 func broadcastLoop(ctx context.Context, conn *net.UDPConn, cfg Config, t *Table) {
-	dst := &net.UDPAddr{IP: net.IPv4bcast, Port: cfg.Port}
+	dsts := broadcastAddrs(cfg.Port)
 
 	ticker := time.NewTicker(cfg.Interval)
 	defer ticker.Stop()
@@ -154,8 +195,10 @@ func broadcastLoop(ctx context.Context, conn *net.UDPConn, cfg Config, t *Table)
 			slog.Warn("cluster: encode announcement", "error", err)
 			return
 		}
-		if _, err := conn.WriteToUDP(buf, dst); err != nil {
-			slog.Debug("cluster: broadcast announcement", "error", err)
+		for _, dst := range dsts {
+			if _, err := conn.WriteToUDP(buf, dst); err != nil {
+				slog.Debug("cluster: broadcast announcement", "dst", dst, "error", err)
+			}
 		}
 	}
 
