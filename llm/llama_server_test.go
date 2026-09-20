@@ -2115,6 +2115,16 @@ func TestAppendRPCArgs(t *testing.T) {
 			opts: api.Options{Runner: api.Runner{RPCServers: "10.0.0.2:50052,10.0.0.3:50052"}},
 			want: []string{"base", "--rpc", "10.0.0.2:50052,10.0.0.3:50052"},
 		},
+		{
+			name: "manual tensor split appended after --rpc",
+			opts: api.Options{Runner: api.Runner{RPCServers: "10.0.0.2:50052", TensorSplit: "3,1"}},
+			want: []string{"base", "--rpc", "10.0.0.2:50052", "--tensor-split", "3,1"},
+		},
+		{
+			name: "tensor split without RPCServers is ignored -- nothing to split across",
+			opts: api.Options{Runner: api.Runner{TensorSplit: "3,1"}},
+			want: []string{"base"},
+		},
 	}
 
 	for _, tt := range tests {

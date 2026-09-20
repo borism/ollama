@@ -259,6 +259,13 @@ var (
 	ClusterShare = BoolWithDefault("OLLAMA_CLUSTER_SHARE")
 	// ClusterPort is the UDP port used for cluster discovery beacons.
 	ClusterPort = Uint("OLLAMA_CLUSTER_PORT", 11435)
+	// ClusterPlacement selects how cluster.SelectRPCServers picks peers:
+	// "" or "waterfill" (default) weighs peers by load/latency and can
+	// spread a shortfall across several of them; "greedy" restores the
+	// original v1 behavior -- peers ranked by free memory, added until
+	// the shortfall is covered, ignoring load/latency. Overridable per
+	// request via api.Options.RPCPlacement.
+	ClusterPlacement = String("OLLAMA_CLUSTER_PLACEMENT")
 	// ContextLength sets the default context length
 	ContextLength = Uint("OLLAMA_CONTEXT_LENGTH", 0)
 	// Auth enables authentication between the Ollama client and server

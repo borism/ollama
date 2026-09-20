@@ -605,6 +605,21 @@ type Runner struct {
 	// priority policy. Ignored once RPCServers is set explicitly (see
 	// cluster.SelectRPCServers).
 	RPCAuto *bool `json:"rpc_auto,omitempty"`
+	// RPCPlacement overrides the server's OLLAMA_CLUSTER_PLACEMENT policy
+	// for this one request: "" follows server policy, "greedy" or
+	// "waterfill" forces it (see cluster.SelectRPCServers). Ignored once
+	// RPCServers is set explicitly.
+	RPCPlacement string `json:"rpc_placement,omitempty"`
+	// TensorSplit is a manual override for how much of the model each
+	// device gets (local devices first, then each host in RPCServers
+	// order), passed straight through to llama-server's own
+	// --tensor-split (comma-separated proportions, e.g. "3,1"). Empty
+	// leaves it to llama.cpp's automatic --fit, proportional to free
+	// memory (llama.cpp's default). Independent of RPCServers/RPCAuto/RPCPlacement
+	// -- this only overrides the split ratio, not which peers are used,
+	// and only takes effect alongside a non-empty RPCServers (manual or
+	// auto-selected).
+	TensorSplit string `json:"tensor_split,omitempty"`
 }
 
 // EmbedRequest is the request passed to [Client.Embed].

@@ -653,13 +653,18 @@ func appendMainGPUArgs(params []string, opts api.Options) []string {
 // of remote capacity. -ngl is deliberately left alone
 // (see appendLoadModeArgs / the NumGPU==-1 default above): llama-server's
 // own auto placement folds the RPC workers into the same proportional split
-// it already gives local multi-GPU, so there's nothing to compute here.
+// it already gives local multi-GPU, so there's nothing to compute here --
+// unless opts.TensorSplit overrides that automatic split manually.
 func appendRPCArgs(params []string, opts api.Options) []string {
 	if opts.RPCServers == "" {
 		return params
 	}
 
-	return append(params, "--rpc", opts.RPCServers)
+	params = append(params, "--rpc", opts.RPCServers)
+	if opts.TensorSplit != "" {
+		params = append(params, "--tensor-split", opts.TensorSplit)
+	}
+	return params
 }
 
 func appendMMProjArgs(params []string, launch llamaServerLaunchConfig) []string {

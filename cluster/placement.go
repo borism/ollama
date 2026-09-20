@@ -100,17 +100,26 @@ func waterFill(rates, links, caps []float64) []float64 {
 // link latency arrives pre-measured on Peer.Latency (see discovery.go's
 // probeLoop), so this is just a decision over the snapshot it's given.
 //
-// Speed-aware water-fill: peers are weighted by self-reported headroom
-// (1-Load) and measured link latency, not just free memory, and every peer
-// with a positive share ends up in the list (splitting a shortfall across
-// several half-free peers can beat parking it all on the one biggest peer).
-// The actual byte split across included servers is still llama.cpp's own
-// job (automatic, proportional to each device's reported free memory);
-// this only decides which peers are worth the hop and in what
-// priority order. rates[i] is a 0..1 headroom score, not a measured
-// tokens/sec -- a real per-device throughput bench is still a
-// fast-follow, this just stops ignoring the signals
-// already on hand (load, network latency, a minimum-useful-memory floor).
+// Two selection policies (opts.RPCPlacement, falling back to
+// envconfig.ClusterPlacement()):
+//   - "waterfill" (default, empty also means this): peers are weighted by
+//     self-reported headroom (1-Load) and measured link latency, not just
+//     free memory, and every peer with a positive share ends up in the
+//     list (splitting a shortfall across several half-free peers can beat
+//     parking it all on the one biggest peer).
+//   - "greedy": the original v1 behavior -- peers ranked by free memory,
+//     added until the shortfall is covered, ignoring load/latency. Uses
+//     the fewest peers (and network hops) rather than balancing load;
+//     kept as an option for comparison or when minimizing hops matters
+//     more than balancing.
+//
+// Either way, the actual byte split across included servers is still
+// llama.cpp's own job (automatic, proportional to each device's reported
+// free memory) unless opts.TensorSplit overrides it manually
+// (llm/llama_server.go's appendRPCArgs); this function only decides which
+// peers are worth the hop and in what priority order. The "waterfill"
+// rate is a 0..1 headroom score, not a measured tokens/sec -- a real
+// per-device throughput bench is still a fast-follow.
 func SelectRPCServers(gpus []ml.DeviceInfo, predicted uint64, peers []Peer, opts api.Options) api.Options {
 	if opts.RPCServers != "" {
 		return opts
@@ -120,7 +129,6 @@ func SelectRPCServers(gpus []ml.DeviceInfo, predicted uint64, peers []Peer, opts
 	if local >= predicted {
 		return opts
 	}
-	shortfall := float64(predicted - local)
 
 	usable := make([]Peer, 0, len(peers))
 	for _, p := range peers {
@@ -132,6 +140,48 @@ func SelectRPCServers(gpus []ml.DeviceInfo, predicted uint64, peers []Peer, opts
 		return opts
 	}
 
+	policy := opts.RPCPlacement
+	if policy == "" {
+		policy = envconfig.ClusterPlacement()
+	}
+
+	var addrs []string
+	if policy == "greedy" {
+		addrs = selectGreedy(usable, local, predicted)
+	} else {
+		addrs = selectWaterFill(usable, predicted-local)
+	}
+
+	opts.RPCServers = strings.Join(addrs, ",")
+	return opts
+}
+
+// selectGreedy: peers ranked by free memory descending, added until the
+// running total (starting from local capacity) covers predicted. Stops as
+// soon as it's covered, so a peer not needed for that stays unused even if
+// idle -- see SelectRPCServers's doc comment for the water-fill contrast.
+func selectGreedy(usable []Peer, local, predicted uint64) []string {
+	sorted := append([]Peer(nil), usable...)
+	sort.SliceStable(sorted, func(i, j int) bool {
+		return peerFreeMemory(sorted[i]) > peerFreeMemory(sorted[j])
+	})
+
+	cum := local
+	addrs := make([]string, 0, len(sorted))
+	for _, p := range sorted {
+		if cum >= predicted {
+			break
+		}
+		addrs = append(addrs, fmt.Sprintf("%s:%d", p.Addr, p.RPCPort))
+		cum += peerFreeMemory(p)
+	}
+	return addrs
+}
+
+// selectWaterFill weighs peers by self-reported headroom and measured
+// link latency via waterFill, includes every peer with a positive share,
+// and orders the result by share descending.
+func selectWaterFill(usable []Peer, shortfall uint64) []string {
 	rates := make([]float64, len(usable))
 	links := make([]float64, len(usable))
 	caps := make([]float64, len(usable))
@@ -140,7 +190,7 @@ func SelectRPCServers(gpus []ml.DeviceInfo, predicted uint64, peers []Peer, opts
 		// a zero rate that a network hiccup could then divide by.
 		rates[i] = math.Max(0.05, 1-p.Load)
 		links[i] = p.Latency.Seconds()
-		caps[i] = float64(peerFreeMemory(p)) / shortfall
+		caps[i] = float64(peerFreeMemory(p)) / float64(shortfall)
 	}
 	fracs := waterFill(rates, links, caps)
 
@@ -162,7 +212,5 @@ func SelectRPCServers(gpus []ml.DeviceInfo, predicted uint64, peers []Peer, opts
 	for i, s := range picked {
 		addrs[i] = fmt.Sprintf("%s:%d", s.peer.Addr, s.peer.RPCPort)
 	}
-
-	opts.RPCServers = strings.Join(addrs, ",")
-	return opts
+	return addrs
 }

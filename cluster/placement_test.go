@@ -169,6 +169,49 @@ func TestSelectRPCServersPrefersLowLatency(t *testing.T) {
 	}
 }
 
+// TestSelectRPCServersGreedyPolicy: same busy/idle equal-memory peers as
+// TestSelectRPCServersPrefersLowLoad, but forced to "greedy" policy. Both
+// peers are still needed to cover the shortfall, but greedy ignores load
+// entirely -- ties on free memory break by input order, not by who's idle.
+func TestSelectRPCServersGreedyPolicy(t *testing.T) {
+	busy := peerAt("10.0.0.2", 5000, 0.9, 0)
+	idle := peerAt("10.0.0.3", 5000, 0, 0)
+
+	got := SelectRPCServers([]ml.DeviceInfo{gpu(100)}, mib(6000), []Peer{busy, idle},
+		api.Options{Runner: api.Runner{RPCPlacement: "greedy"}})
+	want := "10.0.0.2:50052,10.0.0.3:50052" // input order: busy first
+	if got.RPCServers != want {
+		t.Fatalf("RPCServers = %q, want %q", got.RPCServers, want)
+	}
+}
+
+// TestSelectRPCServersGreedyStopsEarly: three peers (6000/5000/3000 MiB, all
+// above minUsefulMemory) covering a 9457 MiB shortfall. Greedy stops once
+// the two biggest cover it, leaving the third completely unused; water-fill
+// (the default) spreads across all three instead. Same input, both
+// policies exercised explicitly so the divergence is the point of the test,
+// not incidental.
+func TestSelectRPCServersGreedyStopsEarly(t *testing.T) {
+	gpus := []ml.DeviceInfo{gpu(1000)} // 543 MiB local available, see TestSelectRPCServers
+	peers := []Peer{
+		peer("10.0.0.2", 50052, RPCProtoMajor, 0, 6000),
+		peer("10.0.0.3", 50052, RPCProtoMajor, 0, 5000),
+		peer("10.0.0.4", 50052, RPCProtoMajor, 0, 3000),
+	}
+
+	greedy := SelectRPCServers(gpus, mib(10000), peers, api.Options{Runner: api.Runner{RPCPlacement: "greedy"}})
+	wantGreedy := "10.0.0.2:50052,10.0.0.3:50052" // .4 never needed, left idle
+	if greedy.RPCServers != wantGreedy {
+		t.Fatalf("greedy RPCServers = %q, want %q", greedy.RPCServers, wantGreedy)
+	}
+
+	waterfill := SelectRPCServers(gpus, mib(10000), peers, api.Options{Runner: api.Runner{RPCPlacement: "waterfill"}})
+	wantWaterfill := "10.0.0.2:50052,10.0.0.3:50052,10.0.0.4:50052" // all three share the load
+	if waterfill.RPCServers != wantWaterfill {
+		t.Fatalf("waterfill RPCServers = %q, want %q", waterfill.RPCServers, wantWaterfill)
+	}
+}
+
 // TestWaterFill exercises the bisection directly: equal rate/link splits
 // proportionally to cap, and a shortfall no combination can fully cover
 // still saturates every device at its own cap rather than returning zero.
