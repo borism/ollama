@@ -25,9 +25,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/format"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/format"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 var (

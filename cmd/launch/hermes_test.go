@@ -14,7 +14,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/ollama/ollama/cmd/config"
+	"github.com/borism/ollama-cluster/cmd/config"
 )
 
 func withHermesPlatform(t *testing.T, goos string) {

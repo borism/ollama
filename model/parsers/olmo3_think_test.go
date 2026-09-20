@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/ollama/ollama/api"
+	"github.com/borism/ollama-cluster/api"
 )
 
 func TestOlmo3ThinkParser(t *testing.T) {

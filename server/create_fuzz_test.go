@@ -7,11 +7,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/fs/gguf"
-	gguftest "github.com/ollama/ollama/internal/testutil/gguf"
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/fs/gguf"
+	gguftest "github.com/borism/ollama-cluster/internal/testutil/gguf"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 const maxCreateGGUFFuzzBytes = 1 << 16

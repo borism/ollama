@@ -15,10 +15,10 @@ import (
 	"sync"
 	"unicode/utf8"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlxrunner/tokenizer"
-	"github.com/ollama/ollama/mlxrunner/xgrammar"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlxrunner/tokenizer"
+	"github.com/borism/ollama-cluster/mlxrunner/xgrammar"
 )
 
 const (

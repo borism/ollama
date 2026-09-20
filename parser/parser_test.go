@@ -19,7 +19,7 @@ import (
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/unicode"
 
-	"github.com/ollama/ollama/api"
+	"github.com/borism/ollama-cluster/api"
 )
 
 func TestParseFileFile(t *testing.T) {

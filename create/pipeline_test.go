@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	st "github.com/ollama/ollama/fs/safetensors"
-	"github.com/ollama/ollama/types/model"
+	st "github.com/borism/ollama-cluster/fs/safetensors"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 type blobStoreFunc func(io.Reader, string, string) (LayerInfo, error)

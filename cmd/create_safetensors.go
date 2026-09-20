@@ -10,13 +10,13 @@ import (
 
 	"golang.org/x/mod/semver"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/create"
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/mlx/quant"
-	"github.com/ollama/ollama/parser"
-	"github.com/ollama/ollama/progress"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/create"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/mlx/quant"
+	"github.com/borism/ollama-cluster/parser"
+	"github.com/borism/ollama-cluster/progress"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 // modelfileConfig holds configuration extracted from a Modelfile.

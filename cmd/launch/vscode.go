@@ -14,9 +14,9 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/cmd/internal/fileutil"
-	"github.com/ollama/ollama/envconfig"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/cmd/internal/fileutil"
+	"github.com/borism/ollama-cluster/envconfig"
 )
 
 // VSCode implements Runner and Editor for Visual Studio Code integration.

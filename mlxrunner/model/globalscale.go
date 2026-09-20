@@ -1,6 +1,6 @@
 package model
 
-import "github.com/ollama/ollama/mlx"
+import "github.com/borism/ollama-cluster/mlx"
 
 // Import rewrites every vendor spelling to ".global_scale"; "_scale_2" is
 // ModelOpt's own name, reached when a checkpoint skips import.

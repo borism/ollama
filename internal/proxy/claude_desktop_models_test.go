@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ollama/ollama/api"
+	"github.com/borism/ollama-cluster/api"
 )
 
 func TestFetchClaudeDesktopModelsUsesAppAwareContract(t *testing.T) {

@@ -3,7 +3,7 @@ package renderers
 import (
 	"testing"
 
-	"github.com/ollama/ollama/api"
+	"github.com/borism/ollama-cluster/api"
 )
 
 func TestOrnithRendererMatchesAssistantHistoryThinkBlocks(t *testing.T) {

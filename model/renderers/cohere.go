@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 // CohereRenderer renders the Cohere North / Command A 2026 chat template

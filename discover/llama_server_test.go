@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ollama/ollama/logutil"
-	"github.com/ollama/ollama/ml"
+	"github.com/borism/ollama-cluster/logutil"
+	"github.com/borism/ollama-cluster/ml"
 )
 
 func TestLlamaServerDiscovery(t *testing.T) {

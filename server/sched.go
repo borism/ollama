@@ -15,17 +15,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/cluster"
-	"github.com/ollama/ollama/discover"
-	"github.com/ollama/ollama/envconfig"
-	"github.com/ollama/ollama/format"
-	"github.com/ollama/ollama/fs/gguf"
-	"github.com/ollama/ollama/llm"
-	"github.com/ollama/ollama/logutil"
-	"github.com/ollama/ollama/ml"
-	"github.com/ollama/ollama/mlxrunner"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/cluster"
+	"github.com/borism/ollama-cluster/discover"
+	"github.com/borism/ollama-cluster/envconfig"
+	"github.com/borism/ollama-cluster/format"
+	"github.com/borism/ollama-cluster/fs/gguf"
+	"github.com/borism/ollama-cluster/llm"
+	"github.com/borism/ollama-cluster/logutil"
+	"github.com/borism/ollama-cluster/ml"
+	"github.com/borism/ollama-cluster/mlxrunner"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 type LlmRequest struct {
@@ -527,7 +527,7 @@ func (s *Scheduler) load(req *LlmRequest, systemInfo ml.SystemInfo, gpus []ml.De
 	}
 
 	// Some architectures are not safe with num_parallel > 1.
-	// ref: https://github.com/ollama/ollama/issues/4165
+	// ref: https://github.com/borism/ollama-cluster/issues/4165
 	if slices.Contains([]string{"mllama", "qwen3vl", "qwen3vlmoe", "qwen35", "qwen35moe", "qwen3next", "lfm2", "lfm2moe", "nemotron_h", "nemotron_h_moe", "nemotron_h_omni"}, req.model.Config.ModelFamily) && numParallel != 1 {
 		numParallel = 1
 		slog.Warn("model architecture does not currently support parallel requests", "architecture", req.model.Config.ModelFamily)

@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/ollama/ollama/cmd/internal/fileutil"
-	"github.com/ollama/ollama/envconfig"
+	"github.com/borism/ollama-cluster/cmd/internal/fileutil"
+	"github.com/borism/ollama-cluster/envconfig"
 )
 
 // Droid implements Runner and Editor for Droid integration

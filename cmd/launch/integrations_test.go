@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/cmd/config"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/cmd/config"
 )
 
 type stubEditorRunner struct {

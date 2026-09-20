@@ -1,4 +1,4 @@
-module github.com/ollama/ollama
+module github.com/borism/ollama-cluster
 
 go 1.26.0
 

@@ -3,8 +3,8 @@ package server
 import (
 	"testing"
 
-	"github.com/ollama/ollama/llm"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/llm"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 func TestModelOptionsNumCtxPriority(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/ollama/ollama/cmd/internal/fileutil"
+	"github.com/borism/ollama-cluster/cmd/internal/fileutil"
 )
 
 func TestVSCodeIntegration(t *testing.T) {

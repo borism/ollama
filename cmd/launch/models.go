@@ -14,12 +14,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/cmd/config"
-	"github.com/ollama/ollama/format"
-	internalcloud "github.com/ollama/ollama/internal/cloud"
-	"github.com/ollama/ollama/internal/modelref"
-	"github.com/ollama/ollama/progress"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/cmd/config"
+	"github.com/borism/ollama-cluster/format"
+	internalcloud "github.com/borism/ollama-cluster/internal/cloud"
+	"github.com/borism/ollama-cluster/internal/modelref"
+	"github.com/borism/ollama-cluster/progress"
 )
 
 var recommendedModels = []ModelItem{

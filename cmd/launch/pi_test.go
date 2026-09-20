@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ollama/ollama/cmd/internal/fileutil"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/cmd/internal/fileutil"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 func TestPiIntegration(t *testing.T) {

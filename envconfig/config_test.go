@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/ollama/ollama/logutil"
+	"github.com/borism/ollama-cluster/logutil"
 )
 
 func TestHost(t *testing.T) {

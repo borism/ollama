@@ -3,8 +3,8 @@ package cache
 import (
 	"testing"
 
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlx/mlxtest"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlx/mlxtest"
 )
 
 // singleTokenKV and multiTokenKV fabricate [B=1, H=1, L, D=2] key/value

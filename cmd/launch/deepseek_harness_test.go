@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/types/model"
 	"gopkg.in/yaml.v3"
 )
 

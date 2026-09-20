@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ollama/ollama/openai"
+	"github.com/borism/ollama-cluster/openai"
 )
 
 func TestNormalizeOllamaAgentMessagesPreservesConversation(t *testing.T) {

@@ -16,8 +16,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/klauspost/compress/zstd"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/openai"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/openai"
 )
 
 func testIntPtr(v int) *int {

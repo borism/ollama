@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ollama/ollama/internal/onboarding"
+	"github.com/borism/ollama-cluster/internal/onboarding"
 )
 
 // setTestHome sets both HOME (Unix) and USERPROFILE (Windows) for cross-platform tests

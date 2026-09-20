@@ -3,7 +3,7 @@ package launch
 import (
 	"testing"
 
-	"github.com/ollama/ollama/api"
+	"github.com/borism/ollama-cluster/api"
 )
 
 func TestProcessContextWindowMatchesLatestAlias(t *testing.T) {

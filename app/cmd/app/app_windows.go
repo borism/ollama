@@ -17,9 +17,9 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/ollama/ollama/app/updater"
-	"github.com/ollama/ollama/app/version"
-	"github.com/ollama/ollama/app/wintray"
+	"github.com/borism/ollama-cluster/app/updater"
+	"github.com/borism/ollama-cluster/app/version"
+	"github.com/borism/ollama-cluster/app/wintray"
 	"golang.org/x/sys/windows"
 )
 

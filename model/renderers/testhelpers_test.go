@@ -3,7 +3,7 @@ package renderers
 import (
 	"encoding/json"
 
-	"github.com/ollama/ollama/api"
+	"github.com/borism/ollama-cluster/api"
 )
 
 func args(s string) api.ToolCallFunctionArguments {

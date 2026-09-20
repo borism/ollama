@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ollama/ollama/envconfig"
-	"github.com/ollama/ollama/internal/proxy"
+	"github.com/borism/ollama-cluster/envconfig"
+	"github.com/borism/ollama-cluster/internal/proxy"
 )
 
 const (

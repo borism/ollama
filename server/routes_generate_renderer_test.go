@@ -11,10 +11,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/ollama/ollama/api"
-	gguftest "github.com/ollama/ollama/internal/testutil/gguf"
-	"github.com/ollama/ollama/llm"
-	"github.com/ollama/ollama/ml"
+	"github.com/borism/ollama-cluster/api"
+	gguftest "github.com/borism/ollama-cluster/internal/testutil/gguf"
+	"github.com/borism/ollama-cluster/llm"
+	"github.com/borism/ollama-cluster/ml"
 )
 
 // TestGenerateWithBuiltinRenderer tests that api/generate uses built-in renderers

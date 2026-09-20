@@ -3,9 +3,9 @@ package mlxrunner
 import (
 	"fmt"
 
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlxrunner/batch"
-	"github.com/ollama/ollama/mlxrunner/model"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlxrunner/batch"
+	"github.com/borism/ollama-cluster/mlxrunner/model"
 )
 
 // dflashPendingFlushTokens bounds the held feature rows between flushes.

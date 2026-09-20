@@ -24,13 +24,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-cmp/cmp"
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/fs/gguf"
-	gguftest "github.com/ollama/ollama/internal/testutil/gguf"
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/openai"
-	"github.com/ollama/ollama/types/model"
-	"github.com/ollama/ollama/version"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/fs/gguf"
+	gguftest "github.com/borism/ollama-cluster/internal/testutil/gguf"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/openai"
+	"github.com/borism/ollama-cluster/types/model"
+	"github.com/borism/ollama-cluster/version"
 )
 
 func createTestFile(t *testing.T, name string) (string, string) {

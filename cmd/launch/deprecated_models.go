@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ollama/ollama/internal/modelref"
+	"github.com/borism/ollama-cluster/internal/modelref"
 )
 
 var deprecatedLaunchModels = map[string]struct{}{

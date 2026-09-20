@@ -1,6 +1,6 @@
 package nn
 
-import "github.com/ollama/ollama/mlx"
+import "github.com/borism/ollama-cluster/mlx"
 
 // EmbeddingLayer is an interface for embedding layers that can also expose a
 // tied-output projection when the model reuses embedding weights as the LM head.

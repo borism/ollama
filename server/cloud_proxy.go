@@ -18,11 +18,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/klauspost/compress/zstd"
 
-	"github.com/ollama/ollama/auth"
-	"github.com/ollama/ollama/envconfig"
-	internalcloud "github.com/ollama/ollama/internal/cloud"
-	"github.com/ollama/ollama/openai"
-	"github.com/ollama/ollama/version"
+	"github.com/borism/ollama-cluster/auth"
+	"github.com/borism/ollama-cluster/envconfig"
+	internalcloud "github.com/borism/ollama-cluster/internal/cloud"
+	"github.com/borism/ollama-cluster/openai"
+	"github.com/borism/ollama-cluster/version"
 )
 
 const (

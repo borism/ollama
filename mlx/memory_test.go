@@ -7,7 +7,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/ollama/ollama/mlx/mlxthread/mlxthreadtest"
+	"github.com/borism/ollama-cluster/mlx/mlxthread/mlxthreadtest"
 )
 
 func TestSetWiredLimitRejectsOversizeWithoutChangingLimit(t *testing.T) {

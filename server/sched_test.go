@@ -12,13 +12,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/format"
-	"github.com/ollama/ollama/fs/gguf"
-	gguftest "github.com/ollama/ollama/internal/testutil/gguf"
-	"github.com/ollama/ollama/llm"
-	"github.com/ollama/ollama/ml"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/format"
+	"github.com/borism/ollama-cluster/fs/gguf"
+	gguftest "github.com/borism/ollama-cluster/internal/testutil/gguf"
+	"github.com/borism/ollama-cluster/llm"
+	"github.com/borism/ollama-cluster/ml"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 func TestMain(m *testing.M) {

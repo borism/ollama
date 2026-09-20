@@ -17,10 +17,10 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/create"
-	"github.com/ollama/ollama/envconfig"
-	"github.com/ollama/ollama/progress"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/create"
+	"github.com/borism/ollama-cluster/envconfig"
+	"github.com/borism/ollama-cluster/progress"
 )
 
 // Six attempts produce at most 31 seconds of exponential backoff per blob.

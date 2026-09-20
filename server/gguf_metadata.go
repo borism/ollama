@@ -12,10 +12,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/ollama/ollama/envconfig"
-	fsgguf "github.com/ollama/ollama/fs/gguf"
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/version"
+	"github.com/borism/ollama-cluster/envconfig"
+	fsgguf "github.com/borism/ollama-cluster/fs/gguf"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/version"
 )
 
 // A blob's metadata block is extracted once into a file beside the model

@@ -24,9 +24,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ollama/ollama/app/store"
-	"github.com/ollama/ollama/app/version"
-	"github.com/ollama/ollama/auth"
+	"github.com/borism/ollama-cluster/app/store"
+	"github.com/borism/ollama-cluster/app/version"
+	"github.com/borism/ollama-cluster/auth"
 )
 
 var (

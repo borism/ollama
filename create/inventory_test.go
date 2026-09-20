@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	st "github.com/ollama/ollama/fs/safetensors"
+	st "github.com/borism/ollama-cluster/fs/safetensors"
 )
 
 func writeConfigJSON(t *testing.T, dir, content string) {

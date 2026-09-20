@@ -17,14 +17,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/fs/gguf"
-	gguftest "github.com/ollama/ollama/internal/testutil/gguf"
-	"github.com/ollama/ollama/llm"
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/ml"
-	ollamatemplate "github.com/ollama/ollama/template"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/fs/gguf"
+	gguftest "github.com/borism/ollama-cluster/internal/testutil/gguf"
+	"github.com/borism/ollama-cluster/llm"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/ml"
+	ollamatemplate "github.com/borism/ollama-cluster/template"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 // testPropsMap creates a ToolPropertiesMap from a map (convenience function for tests)
@@ -2979,8 +2979,8 @@ func TestChatWithPromptEndingInThinkTag(t *testing.T) {
 // completion call. Previously, format was deferred for all thinking-capable
 // parsers and only re-applied after an end-of-thinking transition -- a
 // transition that never fires when thinking is off. See
-// https://github.com/ollama/ollama/issues/15260 and
-// https://github.com/ollama/ollama/issues/14645.
+// https://github.com/borism/ollama-cluster/issues/15260 and
+// https://github.com/borism/ollama-cluster/issues/14645.
 func TestChatFormatWithThinkFalse(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

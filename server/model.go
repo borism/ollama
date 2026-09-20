@@ -9,11 +9,11 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/fs/gguf"
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/template"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/fs/gguf"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/template"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 type modelLayer struct {

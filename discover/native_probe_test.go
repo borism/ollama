@@ -4,7 +4,7 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/ollama/ollama/ml"
+	"github.com/borism/ollama-cluster/ml"
 )
 
 func TestGGMLBackendDevPropsLayout(t *testing.T) {

@@ -18,9 +18,9 @@ import (
 	"time"
 
 	"github.com/klauspost/compress/zstd"
-	"github.com/ollama/ollama/model/renderers"
-	"github.com/ollama/ollama/openai"
-	modelpkg "github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/model/renderers"
+	"github.com/borism/ollama-cluster/openai"
+	modelpkg "github.com/borism/ollama-cluster/types/model"
 )
 
 func TestCodexDesktopRoutesCatalogModelToOllamaAndStripsCredentials(t *testing.T) {

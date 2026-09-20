@@ -43,10 +43,10 @@ import (
 	"golang.org/x/image/webp"
 	"golang.org/x/sync/semaphore"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/envconfig"
-	"github.com/ollama/ollama/fs/gguf"
-	"github.com/ollama/ollama/ml"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/envconfig"
+	"github.com/borism/ollama-cluster/fs/gguf"
+	"github.com/borism/ollama-cluster/ml"
 )
 
 var grammarJSON = `

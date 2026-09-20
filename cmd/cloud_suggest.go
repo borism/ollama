@@ -8,10 +8,10 @@ import (
 
 	"golang.org/x/term"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/cmd/launch"
-	"github.com/ollama/ollama/internal/modelref"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/cmd/launch"
+	"github.com/borism/ollama-cluster/internal/modelref"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 // for testing

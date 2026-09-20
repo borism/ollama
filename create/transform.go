@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/ollama/ollama/fs/safetensors"
+	"github.com/borism/ollama-cluster/fs/safetensors"
 )
 
 // applyByteTransform produces a TensorSpec's output tensor from its resolved

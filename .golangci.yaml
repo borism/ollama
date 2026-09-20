@@ -29,11 +29,11 @@ linters:
             - "!$test"
             - "!**/mlx/mlxtest/*.go"
           deny:
-            - pkg: github.com/ollama/ollama/internal/testutil
+            - pkg: github.com/borism/ollama-cluster/internal/testutil
               desc: test helpers may only be imported by test files
-            - pkg: github.com/ollama/ollama/mlx/mlxtest
+            - pkg: github.com/borism/ollama-cluster/mlx/mlxtest
               desc: test helpers may only be imported by test files
-            - pkg: github.com/ollama/ollama/mlx/mlxthread/mlxthreadtest
+            - pkg: github.com/borism/ollama-cluster/mlx/mlxthread/mlxthreadtest
               desc: test helpers may only be imported by test files
     govet:
       disable:

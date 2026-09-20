@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ollama/ollama/llm"
-	"github.com/ollama/ollama/ml"
+	"github.com/borism/ollama-cluster/llm"
+	"github.com/borism/ollama-cluster/ml"
 )
 
 // Native GPU discovery runs in a short-lived Ollama subprocess so loading GGML

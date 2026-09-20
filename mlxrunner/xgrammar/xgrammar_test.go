@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlxrunner/xgrammar"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlxrunner/xgrammar"
 )
 
 const (

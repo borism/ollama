@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/envconfig"
-	"github.com/ollama/ollama/format"
-	"github.com/ollama/ollama/fs/gguf"
-	"github.com/ollama/ollama/ml"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/envconfig"
+	"github.com/borism/ollama-cluster/format"
+	"github.com/borism/ollama-cluster/fs/gguf"
+	"github.com/borism/ollama-cluster/ml"
 )
 
 var ErrLoadRequiredFull = errors.New("unable to load full model on GPU")

@@ -6,8 +6,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlx/mlxthread/mlxthreadtest"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlx/mlxthread/mlxthreadtest"
 )
 
 var testThread = sync.OnceValues(func() (*mlxthreadtest.Thread, error) {

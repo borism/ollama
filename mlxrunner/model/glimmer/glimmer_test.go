@@ -8,11 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlx/mlxtest"
-	"github.com/ollama/ollama/mlxrunner/cache"
-	"github.com/ollama/ollama/mlxrunner/nn"
-	"github.com/ollama/ollama/mlxrunner/tokenizer"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlx/mlxtest"
+	"github.com/borism/ollama-cluster/mlxrunner/cache"
+	"github.com/borism/ollama-cluster/mlxrunner/nn"
+	"github.com/borism/ollama-cluster/mlxrunner/tokenizer"
 )
 
 func testConfig() Config {

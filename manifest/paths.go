@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ollama/ollama/envconfig"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/envconfig"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 var ErrInvalidDigestFormat = errors.New("invalid digest format")

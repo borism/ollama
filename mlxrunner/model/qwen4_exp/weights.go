@@ -3,10 +3,10 @@ package qwen4_exp
 import (
 	"fmt"
 
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlxrunner/model"
-	"github.com/ollama/ollama/mlxrunner/model/qwen3_5"
-	"github.com/ollama/ollama/mlxrunner/nn"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlxrunner/model"
+	"github.com/borism/ollama-cluster/mlxrunner/model/qwen3_5"
+	"github.com/borism/ollama-cluster/mlxrunner/nn"
 )
 
 type hyperConnection struct {

@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ollama/ollama/ml"
+	"github.com/borism/ollama-cluster/ml"
 )
 
 // RPCProtoMajor/RPCProtoMinor are the RPC_PROTO_MAJOR_VERSION/

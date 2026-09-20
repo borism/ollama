@@ -15,11 +15,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ollama/ollama/api"
-	gguftest "github.com/ollama/ollama/internal/testutil/gguf"
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/template"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	gguftest "github.com/borism/ollama-cluster/internal/testutil/gguf"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/template"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 func TestPruneLayersSkipsRecentOrphans(t *testing.T) {

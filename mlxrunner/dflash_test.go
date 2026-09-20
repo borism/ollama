@@ -5,13 +5,13 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlx/mlxtest"
-	"github.com/ollama/ollama/mlxrunner/batch"
-	"github.com/ollama/ollama/mlxrunner/cache"
-	"github.com/ollama/ollama/mlxrunner/model"
-	sampler "github.com/ollama/ollama/mlxrunner/sample"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlx/mlxtest"
+	"github.com/borism/ollama-cluster/mlxrunner/batch"
+	"github.com/borism/ollama-cluster/mlxrunner/cache"
+	"github.com/borism/ollama-cluster/mlxrunner/model"
+	sampler "github.com/borism/ollama-cluster/mlxrunner/sample"
 )
 
 // fakeBlockDraft is a block-diffusion draft: one Draft call ingests context

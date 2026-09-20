@@ -11,7 +11,7 @@ package cluster
 import (
 	"time"
 
-	"github.com/ollama/ollama/ml"
+	"github.com/borism/ollama-cluster/ml"
 )
 
 // Peer is one other ollama-cluster instance seen on the LAN.

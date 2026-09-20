@@ -7,7 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/ollama/ollama/cmd/launch"
+	"github.com/borism/ollama-cluster/cmd/launch"
 )
 
 var (

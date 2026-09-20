@@ -2,7 +2,7 @@
 
 package main
 
-import "github.com/ollama/ollama/internal/proxy"
+import "github.com/borism/ollama-cluster/internal/proxy"
 
 type claudeDesktopInstallResult string
 

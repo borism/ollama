@@ -14,8 +14,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/klauspost/compress/zstd"
 
-	"github.com/ollama/ollama/middleware"
-	"github.com/ollama/ollama/openai"
+	"github.com/borism/ollama-cluster/middleware"
+	"github.com/borism/ollama-cluster/openai"
 )
 
 // responsesCompactionMiddleware intercepts only Codex compaction control items.

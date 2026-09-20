@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/cmd/internal/fileutil"
-	"github.com/ollama/ollama/model/renderers"
-	modelpkg "github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/cmd/internal/fileutil"
+	"github.com/borism/ollama-cluster/model/renderers"
+	modelpkg "github.com/borism/ollama-cluster/types/model"
 )
 
 func TestCodexIntegration(t *testing.T) {

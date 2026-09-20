@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	modelparsers "github.com/ollama/ollama/model/parsers"
-	"github.com/ollama/ollama/thinking"
-	"github.com/ollama/ollama/types/model"
+	modelparsers "github.com/borism/ollama-cluster/model/parsers"
+	"github.com/borism/ollama-cluster/thinking"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 // inferSafetensorsConfig derives the manifest config shared by local and

@@ -21,14 +21,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/envconfig"
-	"github.com/ollama/ollama/format"
-	"github.com/ollama/ollama/llm"
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/ml"
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/envconfig"
+	"github.com/borism/ollama-cluster/format"
+	"github.com/borism/ollama-cluster/llm"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/ml"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 // Client wraps an MLX runner subprocess to implement llm.LlamaServer for LLM models.

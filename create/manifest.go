@@ -14,10 +14,10 @@ import (
 
 	"golang.org/x/mod/semver"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/template"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/template"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 var (

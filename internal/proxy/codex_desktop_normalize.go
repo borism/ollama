@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/ollama/ollama/openai"
+	"github.com/borism/ollama-cluster/openai"
 )
 
 func extractModel(body []byte) (string, bool) {

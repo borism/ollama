@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/ollama/ollama/cmd/config"
+	"github.com/borism/ollama-cluster/cmd/config"
 	"github.com/spf13/cobra"
 )
 

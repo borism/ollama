@@ -17,7 +17,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ollama/ollama/anthropic"
+	"github.com/borism/ollama-cluster/anthropic"
 )
 
 const (

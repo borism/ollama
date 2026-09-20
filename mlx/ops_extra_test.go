@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/ollama/ollama/mlx/mlxthread/mlxthreadtest"
+	"github.com/borism/ollama-cluster/mlx/mlxthread/mlxthreadtest"
 )
 
 // mlxForm converts checkpoint multipliers to MLX's global-scale

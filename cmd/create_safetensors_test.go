@@ -13,10 +13,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/ollama/ollama/create"
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/parser"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/create"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/parser"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 func TestModelfileConfig(t *testing.T) {

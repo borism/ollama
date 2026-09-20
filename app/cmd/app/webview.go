@@ -20,9 +20,9 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/ollama/ollama/app/dialog"
-	"github.com/ollama/ollama/app/store"
-	"github.com/ollama/ollama/app/webview"
+	"github.com/borism/ollama-cluster/app/dialog"
+	"github.com/borism/ollama-cluster/app/store"
+	"github.com/borism/ollama-cluster/app/webview"
 )
 
 const (

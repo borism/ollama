@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 func TestBuildModelInfo(t *testing.T) {

@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/cmd/internal/fileutil"
-	"github.com/ollama/ollama/envconfig"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/cmd/internal/fileutil"
+	"github.com/borism/ollama-cluster/envconfig"
 )
 
 // Muse implements Runner and Editor for Meta's Muse Code CLI.

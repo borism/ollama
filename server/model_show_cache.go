@@ -14,12 +14,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ollama/ollama/api"
-	internalcloud "github.com/ollama/ollama/internal/cloud"
-	"github.com/ollama/ollama/internal/modelref"
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/types/model"
-	"github.com/ollama/ollama/version"
+	"github.com/borism/ollama-cluster/api"
+	internalcloud "github.com/borism/ollama-cluster/internal/cloud"
+	"github.com/borism/ollama-cluster/internal/modelref"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/types/model"
+	"github.com/borism/ollama-cluster/version"
 )
 
 /*

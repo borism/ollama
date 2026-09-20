@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ollama/ollama/cmd/internal/fileutil"
+	"github.com/borism/ollama-cluster/cmd/internal/fileutil"
 )
 
 // museGeneratedSettings is the launch-owned view of the file muse reads.

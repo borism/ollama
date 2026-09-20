@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"regexp"
 
-	"github.com/ollama/ollama/api"
+	"github.com/borism/ollama-cluster/api"
 )
 
 var errNotRunning = errors.New("could not connect to ollama server, run 'ollama serve' to start it")

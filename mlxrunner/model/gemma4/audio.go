@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlxrunner/model"
-	"github.com/ollama/ollama/mlxrunner/nn"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlxrunner/model"
+	"github.com/borism/ollama-cluster/mlxrunner/nn"
 )
 
 type AudioConfig struct {

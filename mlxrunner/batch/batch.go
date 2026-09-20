@@ -1,6 +1,6 @@
 package batch
 
-import "github.com/ollama/ollama/mlx"
+import "github.com/borism/ollama-cluster/mlx"
 
 // Batch is the per-forward-pass input handed to a model.
 type Batch struct {

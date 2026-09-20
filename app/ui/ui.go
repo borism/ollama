@@ -22,23 +22,23 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/app/server"
-	"github.com/ollama/ollama/app/store"
-	"github.com/ollama/ollama/app/tools"
-	"github.com/ollama/ollama/app/types/not"
-	"github.com/ollama/ollama/app/ui/responses"
-	"github.com/ollama/ollama/app/updater"
-	"github.com/ollama/ollama/app/version"
-	ollamaAuth "github.com/ollama/ollama/auth"
-	"github.com/ollama/ollama/cmd/launch"
-	"github.com/ollama/ollama/envconfig"
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/app/server"
+	"github.com/borism/ollama-cluster/app/store"
+	"github.com/borism/ollama-cluster/app/tools"
+	"github.com/borism/ollama-cluster/app/types/not"
+	"github.com/borism/ollama-cluster/app/ui/responses"
+	"github.com/borism/ollama-cluster/app/updater"
+	"github.com/borism/ollama-cluster/app/version"
+	ollamaAuth "github.com/borism/ollama-cluster/auth"
+	"github.com/borism/ollama-cluster/cmd/launch"
+	"github.com/borism/ollama-cluster/envconfig"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/types/model"
 	_ "github.com/tkrajina/typescriptify-golang-structs/typescriptify"
 )
 
-//go:generate tscriptify -package=github.com/ollama/ollama/app/ui/responses -target=./app/codegen/gotypes.gen.ts responses/types.go
+//go:generate tscriptify -package=github.com/borism/ollama-cluster/app/ui/responses -target=./app/codegen/gotypes.gen.ts responses/types.go
 //go:generate npm --prefix ./app run build
 
 var CORS = envconfig.Bool("OLLAMA_CORS")

@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ollama/ollama/cmd/internal/fileutil"
-	"github.com/ollama/ollama/envconfig"
-	"github.com/ollama/ollama/model/renderers"
-	"github.com/ollama/ollama/openai"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/cmd/internal/fileutil"
+	"github.com/borism/ollama-cluster/envconfig"
+	"github.com/borism/ollama-cluster/model/renderers"
+	"github.com/borism/ollama-cluster/openai"
+	"github.com/borism/ollama-cluster/types/model"
 	"github.com/pelletier/go-toml/v2"
 	"golang.org/x/mod/semver"
 )

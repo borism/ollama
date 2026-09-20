@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ollama/ollama/cmd/config"
-	"github.com/ollama/ollama/cmd/internal/fileutil"
+	"github.com/borism/ollama-cluster/cmd/config"
+	"github.com/borism/ollama-cluster/cmd/internal/fileutil"
 )
 
 func setQwenTestHome(t *testing.T, home string) {

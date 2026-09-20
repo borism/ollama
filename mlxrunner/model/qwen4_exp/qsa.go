@@ -3,9 +3,9 @@ package qwen4_exp
 import (
 	"math"
 
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlxrunner/batch"
-	"github.com/ollama/ollama/mlxrunner/nn"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlxrunner/batch"
+	"github.com/borism/ollama-cluster/mlxrunner/nn"
 )
 
 // canonicalRopePositionRows returns exact [B, 1, L, 3] position rows. MRoPE

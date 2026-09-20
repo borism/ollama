@@ -24,14 +24,14 @@ import (
 	gocmp "github.com/google/go-cmp/cmp"
 	gocmpopts "github.com/google/go-cmp/cmp/cmpopts"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/create"
-	"github.com/ollama/ollama/fs/gguf"
-	st "github.com/ollama/ollama/fs/safetensors"
-	gguftest "github.com/ollama/ollama/internal/testutil/gguf"
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/mlxrunner"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/create"
+	"github.com/borism/ollama-cluster/fs/gguf"
+	st "github.com/borism/ollama-cluster/fs/safetensors"
+	gguftest "github.com/borism/ollama-cluster/internal/testutil/gguf"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/mlxrunner"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 var stream bool = false

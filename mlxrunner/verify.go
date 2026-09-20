@@ -1,7 +1,7 @@
 package mlxrunner
 
 import (
-	"github.com/ollama/ollama/mlxrunner/model"
+	"github.com/borism/ollama-cluster/mlxrunner/model"
 )
 
 // SupportsArchitecture reports whether the MLX runner has a constructor for arch.

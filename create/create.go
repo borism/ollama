@@ -14,9 +14,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ollama/ollama/fs/safetensors"
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/fs/safetensors"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 // SafetensorsMinOllamaVersion is the minimum Ollama version required for

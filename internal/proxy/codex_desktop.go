@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/klauspost/compress/zstd"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 const (

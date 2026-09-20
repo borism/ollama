@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/ollama/ollama/fs/gguf"
-	"github.com/ollama/ollama/manifest"
+	"github.com/borism/ollama-cluster/fs/gguf"
+	"github.com/borism/ollama-cluster/manifest"
 )
 
 const (

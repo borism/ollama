@@ -4,9 +4,9 @@ import (
 	"math"
 	"testing"
 
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlx/mlxtest"
-	"github.com/ollama/ollama/mlxrunner/cache"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlx/mlxtest"
+	"github.com/borism/ollama-cluster/mlxrunner/cache"
 )
 
 func TestSanitizeConvWeight(t *testing.T) {

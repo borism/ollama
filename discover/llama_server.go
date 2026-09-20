@@ -15,9 +15,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ollama/ollama/llm"
-	"github.com/ollama/ollama/logutil"
-	"github.com/ollama/ollama/ml"
+	"github.com/borism/ollama-cluster/llm"
+	"github.com/borism/ollama-cluster/logutil"
+	"github.com/borism/ollama-cluster/ml"
 )
 
 // llamaServerDiscoveryWaitDelay bounds how long Wait can hang after we stop

@@ -16,11 +16,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/auth"
-	internalcloud "github.com/ollama/ollama/internal/cloud"
-	"github.com/ollama/ollama/logutil"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/auth"
+	internalcloud "github.com/borism/ollama-cluster/internal/cloud"
+	"github.com/borism/ollama-cluster/logutil"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 // Error types matching Anthropic API

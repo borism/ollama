@@ -6,7 +6,7 @@ import (
 	"math/cmplx"
 	"sync"
 
-	"github.com/ollama/ollama/mlxrunner/model/audio"
+	"github.com/borism/ollama-cluster/mlxrunner/model/audio"
 )
 
 // Audio front-end constants from the reference Gemma4AudioFeatureExtractor

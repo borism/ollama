@@ -1,8 +1,8 @@
 package model
 
 import (
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlxrunner/nn"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlxrunner/nn"
 )
 
 // LinearFactory builds linear layers using shared tensor maps and quant defaults.

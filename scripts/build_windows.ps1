@@ -897,7 +897,7 @@ function buildOllamaCLI {
         [string]$distDir
     )
     mkdir -Force -path "${distDir}\" | Out-Null
-    & go build -trimpath -ldflags "-s -w -X=github.com/ollama/ollama/version.Version=$script:VERSION -X=github.com/ollama/ollama/server.mode=release" -o "${distDir}\ollama.exe" .
+    & go build -trimpath -ldflags "-s -w -X=github.com/borism/ollama-cluster/version.Version=$script:VERSION -X=github.com/borism/ollama-cluster/server.mode=release" -o "${distDir}\ollama.exe" .
     if ($LASTEXITCODE -ne 0) { exit($LASTEXITCODE)}
 }
 
@@ -981,7 +981,7 @@ function buildApp {
     param (
         [string]$arch
     )
-	& go build -trimpath -ldflags "-s -w -H windowsgui -X=github.com/ollama/ollama/app/version.Version=$script:VERSION" -o .\dist\windows-ollama-app-${arch}.exe ./app/cmd/app/
+	& go build -trimpath -ldflags "-s -w -H windowsgui -X=github.com/borism/ollama-cluster/app/version.Version=$script:VERSION" -o .\dist\windows-ollama-app-${arch}.exe ./app/cmd/app/
     if ($LASTEXITCODE -ne 0) { exit($LASTEXITCODE)}
 }
 

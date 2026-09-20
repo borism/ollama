@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ollama/ollama/llm"
-	"github.com/ollama/ollama/ml"
+	"github.com/borism/ollama-cluster/llm"
+	"github.com/borism/ollama-cluster/ml"
 )
 
 func TestFilterOverlapByLibrary(t *testing.T) {

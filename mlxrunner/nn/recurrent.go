@@ -3,8 +3,8 @@ package nn
 import (
 	"slices"
 
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlxrunner/batch"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlxrunner/batch"
 )
 
 // RecurrentOption configures a call to CausalConv1D, GatedDelta or Mamba2Scan.

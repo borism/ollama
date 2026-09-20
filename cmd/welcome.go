@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/cmd/config"
-	"github.com/ollama/ollama/cmd/launch"
-	"github.com/ollama/ollama/cmd/tui"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/cmd/config"
+	"github.com/borism/ollama-cluster/cmd/launch"
+	"github.com/borism/ollama-cluster/cmd/tui"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )

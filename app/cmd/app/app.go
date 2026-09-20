@@ -22,14 +22,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/ollama/ollama/app/auth"
-	"github.com/ollama/ollama/app/logrotate"
-	"github.com/ollama/ollama/app/server"
-	"github.com/ollama/ollama/app/store"
-	"github.com/ollama/ollama/app/tools"
-	"github.com/ollama/ollama/app/ui"
-	"github.com/ollama/ollama/app/updater"
-	"github.com/ollama/ollama/app/version"
+	"github.com/borism/ollama-cluster/app/auth"
+	"github.com/borism/ollama-cluster/app/logrotate"
+	"github.com/borism/ollama-cluster/app/server"
+	"github.com/borism/ollama-cluster/app/store"
+	"github.com/borism/ollama-cluster/app/tools"
+	"github.com/borism/ollama-cluster/app/ui"
+	"github.com/borism/ollama-cluster/app/updater"
+	"github.com/borism/ollama-cluster/app/version"
 )
 
 var (

@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"runtime"
 
-	"github.com/ollama/ollama/envconfig"
+	"github.com/borism/ollama-cluster/envconfig"
 )
 
 // Poolside implements Runner for Poolside's CLI.

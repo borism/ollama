@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ollama/ollama/ml"
+	"github.com/borism/ollama-cluster/ml"
 )
 
 // TestAnnouncementJSONRoundTrip covers the wire format without touching the

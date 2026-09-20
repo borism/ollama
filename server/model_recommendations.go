@@ -15,9 +15,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/envconfig"
-	"github.com/ollama/ollama/format"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/envconfig"
+	"github.com/borism/ollama-cluster/format"
 )
 
 const modelRecommendationsURL = "https://ollama.com/api/experimental/model-recommendations"

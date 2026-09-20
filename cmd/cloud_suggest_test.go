@@ -12,9 +12,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/cmd/launch"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/cmd/launch"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 func TestCloudSuggestionCandidate(t *testing.T) {

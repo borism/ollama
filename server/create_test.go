@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/ollama/ollama/manifest"
+	"github.com/borism/ollama-cluster/manifest"
 )
 
 func TestValidateCreateFilePath(t *testing.T) {

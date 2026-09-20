@@ -654,7 +654,7 @@ if(OLLAMA_HAVE_LLAMA_SERVER)
     get_filename_component(OLLAMA_GO_OUTPUT_DIR "${OLLAMA_GO_OUTPUT}" DIRECTORY)
 
     set(OLLAMA_GO_LDFLAGS
-        "-s -w -X=github.com/ollama/ollama/version.Version=${OLLAMA_VERSION} -X=github.com/ollama/ollama/server.mode=release")
+        "-s -w -X=github.com/borism/ollama-cluster/version.Version=${OLLAMA_VERSION} -X=github.com/borism/ollama-cluster/server.mode=release")
     if(GO_EXECUTABLE)
         add_custom_target(ollama-go ALL
             COMMAND ${CMAKE_COMMAND} -E make_directory "${OLLAMA_GO_OUTPUT_DIR}"

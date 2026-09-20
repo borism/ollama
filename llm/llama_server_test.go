@@ -22,11 +22,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ollama/ollama/fs/gguf"
-	gguftest "github.com/ollama/ollama/internal/testutil/gguf"
-	"github.com/ollama/ollama/ml"
+	"github.com/borism/ollama-cluster/fs/gguf"
+	gguftest "github.com/borism/ollama-cluster/internal/testutil/gguf"
+	"github.com/borism/ollama-cluster/ml"
 
-	"github.com/ollama/ollama/api"
+	"github.com/borism/ollama-cluster/api"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -3403,7 +3403,7 @@ func TestMemoryParsingWriterMemorySizeMmapPartialOffload(t *testing.T) {
 		wantVRAMMiB   float64
 	}{
 		{
-			// Numbers from https://github.com/ollama/ollama/issues/16637: a
+			// Numbers from https://github.com/borism/ollama-cluster/issues/16637: a
 			// 13.26 GiB MoE GGUF offloaded 48/49 layers with mmap on. The
 			// CPU_Mapped buffer spans nearly the whole file because the first
 			// and last tensors stay on CPU, re-counting the weights already

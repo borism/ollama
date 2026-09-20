@@ -3,10 +3,10 @@ package qwen4_exp
 import (
 	"math"
 
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlxrunner/batch"
-	"github.com/ollama/ollama/mlxrunner/cache"
-	"github.com/ollama/ollama/mlxrunner/nn"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlxrunner/batch"
+	"github.com/borism/ollama-cluster/mlxrunner/cache"
+	"github.com/borism/ollama-cluster/mlxrunner/nn"
 )
 
 func (l *Layer) Forward(x *mlx.Array, b *batch.Batch, c, side cache.Cache, positions, ropePositions *mlx.Array, cfg *Config) *mlx.Array {

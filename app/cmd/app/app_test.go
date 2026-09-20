@@ -6,7 +6,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ollama/ollama/app/store"
+	"github.com/borism/ollama-cluster/app/store"
 )
 
 func TestShouldShowOnboarding(t *testing.T) {

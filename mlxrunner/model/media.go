@@ -9,7 +9,7 @@ import (
 
 	_ "golang.org/x/image/webp"
 
-	"github.com/ollama/ollama/mlx"
+	"github.com/borism/ollama-cluster/mlx"
 )
 
 // Segment is one run of the prompt in stream order: either a tokenized text

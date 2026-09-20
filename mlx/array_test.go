@@ -3,7 +3,7 @@ package mlx
 import (
 	"testing"
 
-	"github.com/ollama/ollama/mlx/mlxthread/mlxthreadtest"
+	"github.com/borism/ollama-cluster/mlx/mlxthread/mlxthreadtest"
 )
 
 func TestFromValue(t *testing.T) {

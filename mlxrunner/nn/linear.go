@@ -1,6 +1,6 @@
 package nn
 
-import "github.com/ollama/ollama/mlx"
+import "github.com/borism/ollama-cluster/mlx"
 
 // LinearLayer is an interface for linear layers (both regular and quantized).
 type LinearLayer interface {

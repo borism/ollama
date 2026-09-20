@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/ollama/ollama/logutil"
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlxrunner/batch"
-	"github.com/ollama/ollama/mlxrunner/nn"
+	"github.com/borism/ollama-cluster/logutil"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlxrunner/batch"
+	"github.com/borism/ollama-cluster/mlxrunner/nn"
 )
 
 // RotatingKVCache implements sliding window attention with bounded memory.

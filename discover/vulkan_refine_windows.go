@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/ollama/ollama/llm"
+	"github.com/borism/ollama-cluster/llm"
 )
 
 const (

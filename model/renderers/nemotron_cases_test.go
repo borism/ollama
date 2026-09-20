@@ -1,6 +1,6 @@
 package renderers
 
-import "github.com/ollama/ollama/api"
+import "github.com/borism/ollama-cluster/api"
 
 // nemotronExtraCases covers template branches the base reference table does
 // not reach: tool-schema shapes, agentic tool loops, and content edge cases.

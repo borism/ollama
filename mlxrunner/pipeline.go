@@ -9,14 +9,14 @@ import (
 	"sort"
 	"time"
 
-	"github.com/ollama/ollama/llm"
-	"github.com/ollama/ollama/logutil"
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlxrunner/batch"
-	"github.com/ollama/ollama/mlxrunner/cache"
-	"github.com/ollama/ollama/mlxrunner/model"
-	sampler "github.com/ollama/ollama/mlxrunner/sample"
-	"github.com/ollama/ollama/mlxrunner/tokenizer"
+	"github.com/borism/ollama-cluster/llm"
+	"github.com/borism/ollama-cluster/logutil"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlxrunner/batch"
+	"github.com/borism/ollama-cluster/mlxrunner/cache"
+	"github.com/borism/ollama-cluster/mlxrunner/model"
+	sampler "github.com/borism/ollama-cluster/mlxrunner/sample"
+	"github.com/borism/ollama-cluster/mlxrunner/tokenizer"
 )
 
 func prefillChunkSize() int {

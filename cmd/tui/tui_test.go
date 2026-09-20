@@ -6,7 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/go-cmp/cmp"
-	"github.com/ollama/ollama/cmd/launch"
+	"github.com/borism/ollama-cluster/cmd/launch"
 )
 
 func launcherTestState() *launch.LauncherState {

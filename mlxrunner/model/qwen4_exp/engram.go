@@ -3,8 +3,8 @@ package qwen4_exp
 import (
 	"math"
 
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlxrunner/batch"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlxrunner/batch"
 )
 
 func (n *streamRMSNorm) Forward(x *mlx.Array, eps float32) *mlx.Array {

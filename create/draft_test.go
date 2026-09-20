@@ -8,7 +8,7 @@ import (
 	"slices"
 	"testing"
 
-	st "github.com/ollama/ollama/fs/safetensors"
+	st "github.com/borism/ollama-cluster/fs/safetensors"
 )
 
 // recordingStore captures the blobs a pipeline run produces so tests can assert

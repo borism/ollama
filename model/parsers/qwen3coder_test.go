@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ollama/ollama/api"
+	"github.com/borism/ollama-cluster/api"
 )
 
 // tool creates a test tool with the given name and properties
@@ -489,7 +489,7 @@ true
 				},
 			},
 		},
-		// regression test for <https://github.com/ollama/ollama/issues/12357>
+		// regression test for <https://github.com/borism/ollama-cluster/issues/12357>
 		{
 			name:  "ampersands in parameter values",
 			tools: []api.Tool{},

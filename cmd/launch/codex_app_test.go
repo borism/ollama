@@ -15,11 +15,11 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/cmd/internal/fileutil"
-	"github.com/ollama/ollama/internal/proxy"
-	"github.com/ollama/ollama/model/renderers"
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/cmd/internal/fileutil"
+	"github.com/borism/ollama-cluster/internal/proxy"
+	"github.com/borism/ollama-cluster/model/renderers"
+	"github.com/borism/ollama-cluster/types/model"
 )
 
 func withCodexAppPlatform(t *testing.T, goos string) {

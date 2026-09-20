@@ -3,7 +3,7 @@ package middleware
 import (
 	"context"
 
-	"github.com/ollama/ollama/api"
+	"github.com/borism/ollama-cluster/api"
 )
 
 const maxWebSearchLoops = 3

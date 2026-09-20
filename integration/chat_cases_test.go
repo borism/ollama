@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/format"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/format"
 )
 
 var sweepVRAMWarning sync.Once

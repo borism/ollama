@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/llm"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/llm"
 )
 
 func testIntPtr(v int) *int {

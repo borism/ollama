@@ -16,8 +16,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/ollama/ollama/internal/proxy"
-	"github.com/ollama/ollama/openai"
+	"github.com/borism/ollama-cluster/internal/proxy"
+	"github.com/borism/ollama-cluster/openai"
 )
 
 func TestIsCompactionContextLimit(t *testing.T) {

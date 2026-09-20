@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ollama/ollama/app/store"
-	"github.com/ollama/ollama/app/version"
+	"github.com/borism/ollama-cluster/app/store"
+	"github.com/borism/ollama-cluster/app/version"
 )
 
 // TestLiveAppUpdate exercises the production update endpoint and downloads the

@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlx/quant"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlx/quant"
 )
 
 // TensorQuantInfo describes per-tensor quantization metadata.

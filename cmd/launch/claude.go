@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ollama/ollama/envconfig"
+	"github.com/borism/ollama-cluster/envconfig"
 )
 
 // Claude implements Runner for Claude Code integration.

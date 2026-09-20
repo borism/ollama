@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/ollama/ollama/api"
-	modelpkg "github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	modelpkg "github.com/borism/ollama-cluster/types/model"
 )
 
 func TestModelInventoryResolveRefreshesLocalMiss(t *testing.T) {

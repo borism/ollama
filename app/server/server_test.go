@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ollama/ollama/app/store"
+	"github.com/borism/ollama-cluster/app/store"
 )
 
 func TestNew(t *testing.T) {

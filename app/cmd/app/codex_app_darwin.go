@@ -15,13 +15,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ollama/ollama/api"
-	appui "github.com/ollama/ollama/app/ui"
-	"github.com/ollama/ollama/cmd/config"
-	"github.com/ollama/ollama/cmd/launch"
-	"github.com/ollama/ollama/internal/modelref"
-	"github.com/ollama/ollama/internal/proxy"
-	modelpkg "github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/api"
+	appui "github.com/borism/ollama-cluster/app/ui"
+	"github.com/borism/ollama-cluster/cmd/config"
+	"github.com/borism/ollama-cluster/cmd/launch"
+	"github.com/borism/ollama-cluster/internal/modelref"
+	"github.com/borism/ollama-cluster/internal/proxy"
+	modelpkg "github.com/borism/ollama-cluster/types/model"
 )
 
 const (

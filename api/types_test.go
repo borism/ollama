@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ollama/ollama/types/model"
+	"github.com/borism/ollama-cluster/types/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

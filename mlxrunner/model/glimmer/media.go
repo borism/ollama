@@ -11,9 +11,9 @@ import (
 
 	"golang.org/x/image/draw"
 
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlxrunner/batch"
-	"github.com/ollama/ollama/mlxrunner/model"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlxrunner/batch"
+	"github.com/borism/ollama-cluster/mlxrunner/model"
 )
 
 // The reference processor uses the full 4096-token budget for still images.

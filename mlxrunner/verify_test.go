@@ -3,7 +3,7 @@ package mlxrunner
 import (
 	"testing"
 
-	"github.com/ollama/ollama/mlx"
+	"github.com/borism/ollama-cluster/mlx"
 )
 
 func TestCheckRuntimeRequiresLoadedLibrary(t *testing.T) {

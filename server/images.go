@@ -21,17 +21,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/envconfig"
-	"github.com/ollama/ollama/manifest"
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/model/parsers"
-	"github.com/ollama/ollama/parser"
-	"github.com/ollama/ollama/template"
-	"github.com/ollama/ollama/thinking"
-	"github.com/ollama/ollama/types/model"
-	"github.com/ollama/ollama/version"
-	"github.com/ollama/ollama/x/transfer"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/envconfig"
+	"github.com/borism/ollama-cluster/manifest"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/model/parsers"
+	"github.com/borism/ollama-cluster/parser"
+	"github.com/borism/ollama-cluster/template"
+	"github.com/borism/ollama-cluster/thinking"
+	"github.com/borism/ollama-cluster/types/model"
+	"github.com/borism/ollama-cluster/version"
+	"github.com/borism/ollama-cluster/x/transfer"
 )
 
 // Blobs newer than this may belong to another process that has not written its

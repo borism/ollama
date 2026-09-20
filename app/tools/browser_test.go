@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ollama/ollama/app/ui/responses"
+	"github.com/borism/ollama-cluster/app/ui/responses"
 )
 
 func makeTestPage(url string) *responses.Page {

@@ -10,8 +10,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/ollama/ollama/cmd/internal/fileutil"
-	"github.com/ollama/ollama/envconfig"
+	"github.com/borism/ollama-cluster/cmd/internal/fileutil"
+	"github.com/borism/ollama-cluster/envconfig"
 )
 
 const openCodeInstallScript = "curl -fsSL https://opencode.ai/install | bash"

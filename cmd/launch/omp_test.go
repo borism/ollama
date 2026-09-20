@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	modelpkg "github.com/ollama/ollama/types/model"
+	modelpkg "github.com/borism/ollama-cluster/types/model"
 	"gopkg.in/yaml.v3"
 )
 

@@ -1,6 +1,6 @@
 package nn
 
-import "github.com/ollama/ollama/mlx"
+import "github.com/borism/ollama-cluster/mlx"
 
 // Conv1d applies 1D convolution over NLC input.
 type Conv1d struct {

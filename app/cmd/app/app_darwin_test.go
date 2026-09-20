@@ -18,10 +18,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/app/store"
-	"github.com/ollama/ollama/cmd/launch"
-	"github.com/ollama/ollama/internal/proxy"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/app/store"
+	"github.com/borism/ollama-cluster/cmd/launch"
+	"github.com/borism/ollama-cluster/internal/proxy"
 )
 
 func TestMain(m *testing.M) {

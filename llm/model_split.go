@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ollama/ollama/fs/gguf"
+	"github.com/borism/ollama-cluster/fs/gguf"
 )
 
 const (

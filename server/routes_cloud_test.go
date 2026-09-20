@@ -15,10 +15,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ollama/ollama/api"
-	internalcloud "github.com/ollama/ollama/internal/cloud"
-	"github.com/ollama/ollama/middleware"
-	"github.com/ollama/ollama/version"
+	"github.com/borism/ollama-cluster/api"
+	internalcloud "github.com/borism/ollama-cluster/internal/cloud"
+	"github.com/borism/ollama-cluster/middleware"
+	"github.com/borism/ollama-cluster/version"
 )
 
 func TestStatusHandler(t *testing.T) {

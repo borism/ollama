@@ -16,8 +16,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/ollama/ollama/app/types/not"
-	"github.com/ollama/ollama/internal/onboarding"
+	"github.com/borism/ollama-cluster/app/types/not"
+	"github.com/borism/ollama-cluster/internal/onboarding"
 )
 
 type File struct {

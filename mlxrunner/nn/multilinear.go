@@ -1,6 +1,6 @@
 package nn
 
-import "github.com/ollama/ollama/mlx"
+import "github.com/borism/ollama-cluster/mlx"
 
 // MultiLinear performs per-head linear projections.
 // Weight shape: [num_heads, output_dims, input_dims]

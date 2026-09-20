@@ -3,8 +3,8 @@ package cluster
 import (
 	"testing"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/ml"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/ml"
 )
 
 func gpu(freeMB uint64) ml.DeviceInfo {

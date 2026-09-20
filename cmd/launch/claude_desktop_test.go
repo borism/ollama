@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ollama/ollama/cmd/config"
+	"github.com/borism/ollama-cluster/cmd/config"
 )
 
 func withClaudeDesktopPlatform(t *testing.T, goos string) {

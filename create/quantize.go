@@ -9,8 +9,8 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/ollama/ollama/mlx"
-	"github.com/ollama/ollama/mlx/quant"
+	"github.com/borism/ollama-cluster/mlx"
+	"github.com/borism/ollama-cluster/mlx/quant"
 )
 
 // quantizeItem is one tensor going into a (possibly multi-tensor) quantized

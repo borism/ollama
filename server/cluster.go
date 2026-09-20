@@ -5,11 +5,11 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/ollama/ollama/cluster"
-	"github.com/ollama/ollama/discover"
-	"github.com/ollama/ollama/envconfig"
-	"github.com/ollama/ollama/llm"
-	"github.com/ollama/ollama/ml"
+	"github.com/borism/ollama-cluster/cluster"
+	"github.com/borism/ollama-cluster/discover"
+	"github.com/borism/ollama-cluster/envconfig"
+	"github.com/borism/ollama-cluster/llm"
+	"github.com/borism/ollama-cluster/ml"
 )
 
 // startCluster wires OLLAMA_CLUSTER into a running Scheduler: LAN peer

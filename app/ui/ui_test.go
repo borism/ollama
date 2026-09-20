@@ -15,11 +15,11 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/app/store"
-	"github.com/ollama/ollama/app/ui/responses"
-	"github.com/ollama/ollama/app/updater"
-	"github.com/ollama/ollama/cmd/launch"
+	"github.com/borism/ollama-cluster/api"
+	"github.com/borism/ollama-cluster/app/store"
+	"github.com/borism/ollama-cluster/app/ui/responses"
+	"github.com/borism/ollama-cluster/app/updater"
+	"github.com/borism/ollama-cluster/cmd/launch"
 )
 
 func TestHandlePostApiSettings(t *testing.T) {

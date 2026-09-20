@@ -5,7 +5,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ollama/ollama/mlx/mlxthread"
+	"github.com/borism/ollama-cluster/mlx/mlxthread"
 )
 
 // Thread is a pinned worker used by MLX tests.
