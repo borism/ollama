@@ -10,15 +10,7 @@ import (
 	"github.com/ollama/ollama/ml"
 )
 
-// RPC_PROTO_MAJOR_VERSION / minor this build's ggml-rpc-server speaks
-// (ggml/include/ggml-rpc.h in ggml-org/llama.cpp, the version
-// is enforced at handshake). Also defined in
-// discovery.go; a duplicate declaration there is a compile-time collision
-// to be deduplicated at integration, not a runtime concern here.
-const (
-	RPCProtoMajor = 6
-	RPCProtoMinor = 0
-)
+// RPCProtoMajor/RPCProtoMinor are defined in discovery.go.
 
 // localAvailable is the same "usable free memory" convention
 // server/sched.go's load() applies per GPU before deciding placement
