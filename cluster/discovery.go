@@ -232,6 +232,7 @@ func listenLoop(ctx context.Context, conn *net.UDPConn, cfg Config, t *Table) {
 			slog.Debug("cluster: decode announcement", "error", err, "src", src)
 			continue
 		}
+		slog.Debug("cluster: received announcement", "id", a.ID, "self_id", cfg.SelfID, "src", src)
 		if a.ID == "" || a.ID == cfg.SelfID {
 			continue
 		}
