@@ -870,6 +870,35 @@ type ProcessResponse struct {
 	Models []ProcessModelResponse `json:"models"`
 }
 
+// ClusterListResponse is the response from [Client.ClusterList]. Enabled is
+// false when this instance isn't running with OLLAMA_CLUSTER=1, in which
+// case Peers is always empty -- not the same thing as "cluster is on but no
+// peers found yet".
+type ClusterListResponse struct {
+	Enabled bool          `json:"enabled"`
+	Peers   []ClusterPeer `json:"peers"`
+}
+
+// ClusterPeer is one other ollama-cluster instance seen on the LAN, from
+// [Client.ClusterList]. See cluster.Peer for the field semantics this
+// mirrors.
+type ClusterPeer struct {
+	ID        string          `json:"id"`
+	Addr      string          `json:"addr"`
+	Sharing   bool            `json:"sharing"`
+	Devices   []ClusterDevice `json:"devices"`
+	Load      float64         `json:"load"`
+	LatencyMs int64           `json:"latency_ms,omitempty"`
+	LastSeen  time.Time       `json:"last_seen"`
+}
+
+// ClusterDevice is one GPU (or CPU) a [ClusterPeer] reports as available.
+type ClusterDevice struct {
+	Name        string `json:"name"`
+	TotalMemory uint64 `json:"total_memory"`
+	FreeMemory  uint64 `json:"free_memory"`
+}
+
 // ListModelResponse is a single model description in [ListResponse].
 type ListModelResponse struct {
 	Name         string             `json:"name"`

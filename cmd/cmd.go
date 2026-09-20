@@ -1252,6 +1252,66 @@ func ListRunningHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// ClusterListHandler lists this instance's known ollama-cluster peers (see
+// docs/cluster.mdx).
+func ClusterListHandler(cmd *cobra.Command, args []string) error {
+	client, err := api.ClientFromEnvironment()
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.ClusterList(cmd.Context())
+	if err != nil {
+		return err
+	}
+
+	if !resp.Enabled {
+		fmt.Println("cluster mode is off on this instance -- set OLLAMA_CLUSTER=1 and restart the server to enable it")
+		return nil
+	}
+
+	var data [][]string
+	for _, p := range resp.Peers {
+		var devices []string
+		for _, d := range p.Devices {
+			devices = append(devices, fmt.Sprintf("%s (%s free)", d.Name, format.HumanBytes2(d.FreeMemory)))
+		}
+
+		sharing := "no"
+		if p.Sharing {
+			sharing = "yes"
+		}
+
+		latency := "-"
+		if p.LatencyMs > 0 {
+			latency = fmt.Sprintf("%dms", p.LatencyMs)
+		}
+
+		data = append(data, []string{
+			p.ID,
+			p.Addr,
+			sharing,
+			strings.Join(devices, ", "),
+			fmt.Sprintf("%.0f%%", p.Load*100),
+			latency,
+			format.HumanTime(p.LastSeen, "-"),
+		})
+	}
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"ID", "ADDRESS", "SHARING", "DEVICES", "LOAD", "LATENCY", "LAST SEEN"})
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.SetHeaderLine(false)
+	table.SetBorder(false)
+	table.SetNoWhiteSpace(true)
+	table.SetTablePadding("    ")
+	table.AppendBulk(data)
+	table.Render()
+
+	return nil
+}
+
 func DeleteHandler(cmd *cobra.Command, args []string) error {
 	client, err := api.ClientFromEnvironment()
 	if err != nil {
@@ -2558,6 +2618,19 @@ func NewCLI() *cobra.Command {
 		RunE:    CopyHandler,
 	}
 
+	clusterLsCmd := &cobra.Command{
+		Use:     "ls",
+		Aliases: []string{"list"},
+		Short:   "List known ollama-cluster peers",
+		PreRunE: checkServerHeartbeat,
+		RunE:    ClusterListHandler,
+	}
+	clusterCmd := &cobra.Command{
+		Use:   "cluster",
+		Short: "Manage ollama-cluster peers",
+	}
+	clusterCmd.AddCommand(clusterLsCmd)
+
 	deleteCmd := &cobra.Command{
 		Use:     "rm MODEL [MODEL...]",
 		Short:   "Remove a model",
@@ -2603,6 +2676,7 @@ func NewCLI() *cobra.Command {
 		psCmd,
 		copyCmd,
 		deleteCmd,
+		clusterLsCmd,
 		serveCmd,
 	} {
 		switch cmd {
@@ -2653,6 +2727,7 @@ func NewCLI() *cobra.Command {
 		psCmd,
 		copyCmd,
 		deleteCmd,
+		clusterCmd,
 		runnerCmd,
 		gpuDiscoverCmd,
 		launch.LaunchCmd(checkServerHeartbeat, runInteractiveTUI),

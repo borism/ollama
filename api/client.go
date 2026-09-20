@@ -391,6 +391,17 @@ func (c *Client) ListRunning(ctx context.Context) (*ProcessResponse, error) {
 	return &lr, nil
 }
 
+// ClusterList lists this instance's known ollama-cluster peers (see
+// docs/cluster.mdx). Enabled is false, with an empty peer list, when this
+// instance isn't running with OLLAMA_CLUSTER=1.
+func (c *Client) ClusterList(ctx context.Context) (*ClusterListResponse, error) {
+	var resp ClusterListResponse
+	if err := c.do(ctx, http.MethodGet, "/api/cluster/peers", nil, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
 // Copy copies a model - creating a model with another name from an existing
 // model.
 func (c *Client) Copy(ctx context.Context, req *CopyRequest) error {

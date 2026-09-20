@@ -40,6 +40,18 @@ Once two or more instances are running with `OLLAMA_CLUSTER=1`, a request
 for a model that doesn't fit locally will automatically pick a peer with
 free GPU memory and pass it to `llama-server` as an RPC worker.
 
+## Listing peers
+
+```shell
+ollama cluster ls
+```
+
+Lists the peers this instance currently sees on the LAN: address, whether
+they're sharing spare GPU capacity, their devices and free memory, load,
+measured round-trip latency, and when they were last seen. Says so plainly
+if `OLLAMA_CLUSTER` isn't on for this instance, rather than printing an
+empty table.
+
 ## Environment variables
 
 | Variable | Default | Purpose |

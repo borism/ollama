@@ -33,6 +33,7 @@ import (
 
 	"github.com/borism/ollama-cluster/api"
 	"github.com/borism/ollama-cluster/auth"
+	"github.com/borism/ollama-cluster/cluster"
 	"github.com/borism/ollama-cluster/discover"
 	"github.com/borism/ollama-cluster/envconfig"
 	"github.com/borism/ollama-cluster/format"
@@ -1924,6 +1925,7 @@ func (s *Server) GenerateRoutes() (http.Handler, error) {
 
 	// Inference
 	r.GET("/api/ps", s.PsHandler)
+	r.GET("/api/cluster/peers", s.ClusterPeersHandler)
 	r.POST("/api/generate", s.withInferenceRequestLogging("/api/generate", s.GenerateHandler)...)
 	r.POST("/api/chat", s.withInferenceRequestLogging("/api/chat", s.ChatHandler)...)
 	r.POST("/api/embed", s.EmbedHandler)
@@ -2327,6 +2329,51 @@ func (s *Server) PsHandler(c *gin.Context) {
 	})
 
 	c.JSON(http.StatusOK, api.ProcessResponse{Models: models})
+}
+
+// ClusterPeersHandler lists this instance's known ollama-cluster peers (see
+// docs/cluster.mdx). clusterTable is nil unless OLLAMA_CLUSTER=1 (see
+// server/cluster.go's startCluster), so "cluster is off" is reported
+// distinctly from "cluster is on but no peers found yet".
+func (s *Server) ClusterPeersHandler(c *gin.Context) {
+	if s.sched.clusterTable == nil {
+		c.JSON(http.StatusOK, api.ClusterListResponse{})
+		return
+	}
+
+	peers := []api.ClusterPeer{}
+	for _, p := range s.sched.clusterTable.Peers() {
+		peers = append(peers, clusterPeerToAPI(p))
+	}
+
+	slices.SortStableFunc(peers, func(a, b api.ClusterPeer) int {
+		return cmp.Compare(a.Addr, b.Addr)
+	})
+
+	c.JSON(http.StatusOK, api.ClusterListResponse{Enabled: true, Peers: peers})
+}
+
+// clusterPeerToAPI converts a discovery-side cluster.Peer to the API shape
+// ClusterPeersHandler returns. Pulled out of the handler so the field
+// mapping is unit-testable without standing up a live discovery Table.
+func clusterPeerToAPI(p cluster.Peer) api.ClusterPeer {
+	devices := make([]api.ClusterDevice, 0, len(p.Devices))
+	for _, d := range p.Devices {
+		devices = append(devices, api.ClusterDevice{
+			Name:        d.Name,
+			TotalMemory: d.TotalMemory,
+			FreeMemory:  d.FreeMemory,
+		})
+	}
+	return api.ClusterPeer{
+		ID:        p.ID,
+		Addr:      p.Addr,
+		Sharing:   p.RPCPort != 0,
+		Devices:   devices,
+		Load:      p.Load,
+		LatencyMs: p.Latency.Milliseconds(),
+		LastSeen:  p.LastSeen,
+	}
 }
 
 func toolCallId() string {
