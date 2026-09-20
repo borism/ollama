@@ -15,7 +15,7 @@ import (
 
 // minUsefulMemory: a peer with less spare memory than this isn't worth
 // an RPC hop for.
-const minUsefulMemory = 2048 * 1024 * 1024 // 2 GiB
+const minUsefulMemory = 1024 * 1024 * 1024 // 1 GiB
 
 // localAvailable is the same "usable free memory" convention
 // server/sched.go's load() applies per GPU before deciding placement

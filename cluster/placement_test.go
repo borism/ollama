@@ -141,6 +141,22 @@ func TestSelectRPCServersMinUsefulMemory(t *testing.T) {
 	}
 }
 
+// TestSelectRPCServersMinUsefulMemoryBoundary pins the floor at 1 GiB, not
+// the earlier 2 GiB: a peer with 1200 MiB free -- below the old floor,
+// above the current one -- must be usable.
+func TestSelectRPCServersMinUsefulMemoryBoundary(t *testing.T) {
+	got := SelectRPCServers(
+		[]ml.DeviceInfo{gpu(100)},
+		mib(10000),
+		[]Peer{peer("10.0.0.2", 50052, RPCProtoMajor, 0, 1200)},
+		api.Options{},
+	)
+	want := "10.0.0.2:50052"
+	if got.RPCServers != want {
+		t.Fatalf("RPCServers = %q, want %q (peer above the 1 GiB floor)", got.RPCServers, want)
+	}
+}
+
 // TestSelectRPCServersPrefersLowLoad: two peers with equal free memory but
 // different self-reported load. The idle one should be used to its full
 // capacity and listed first; the busy one only covers the remainder.

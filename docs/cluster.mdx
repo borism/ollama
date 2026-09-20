@@ -100,7 +100,7 @@ real free-memory numbers, how many layers fit across local GPU(s) + every
 RPC peer + CPU combined — the same layer-placement logic that already runs
 with zero cluster peers.
 
-One deliberate exception: a peer with less than 2 GiB of spare memory is
+One deliberate exception: a peer with less than 1 GiB of spare memory is
 skipped entirely, even if it could hold a layer or two — not worth a
 network hop for that little. That slice goes to CPU too.
 
