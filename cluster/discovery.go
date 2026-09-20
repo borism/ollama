@@ -273,10 +273,13 @@ func probeLoop(ctx context.Context, t *Table) {
 				start := time.Now()
 				conn, err := net.DialTimeout("tcp", addr, probeTimeout)
 				if err != nil {
+					slog.Debug("cluster: latency probe failed, keeping last-known value", "id", p.ID, "addr", addr, "error", err)
 					continue
 				}
 				conn.Close()
-				t.setLatency(p.ID, time.Since(start))
+				latency := time.Since(start)
+				slog.Debug("cluster: probed peer latency", "id", p.ID, "addr", addr, "latency", latency)
+				t.setLatency(p.ID, latency)
 			}
 		}
 	}
