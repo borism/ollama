@@ -113,8 +113,18 @@ jobs:
         include:
           - arch: amd64
             runner: ubuntu-latest
+            cmake_args: ''
           - arch: arm64
             runner: ubuntu-24.04-arm
+            # ponytail: GGML_CPU_ALL_VARIANTS unconditionally registers an
+            # armv9.2+sme variant (ggml/src/CMakeLists.txt) with no
+            # compiler-capability check the way its PowerPC equivalent has
+            # -- ubuntu-24.04-arm's gcc rejects "+sme" as an invalid -march
+            # feature modifier, failing the whole build. Single baseline
+            # variant instead of runtime CPU dispatch; upgrade path: drop
+            # this once upstream guards that variant (or once this runner
+            # image ships a gcc that accepts +sme).
+            cmake_args: '-DGGML_CPU_ALL_VARIANTS=OFF'
     runs-on: ${{ matrix.runner }}
     environment: release
     needs: setup-environment
@@ -142,7 +152,7 @@ jobs:
         # ubuntu-latest/ubuntu-24.04-arm (Docker containers work fine on
         # GitHub-hosted runners for a compile-only build -- no GPU needed).
         run: |
-          cmake -S . -B build/local-superbuild
+          cmake -S . -B build/local-superbuild ${{ matrix.cmake_args }}
           CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) cmake --build build/local-superbuild --target ollama-local -- -l $(nproc)
       - name: Package
         run: |
