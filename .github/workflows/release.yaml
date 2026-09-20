@@ -130,6 +130,7 @@ jobs:
     needs: setup-environment
     env:
       GOFLAGS: ${{ needs.setup-environment.outputs.GOFLAGS }}
+      VERSION: ${{ needs.setup-environment.outputs.VERSION }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -151,8 +152,14 @@ jobs:
         # yet. Upgrade path: add matrix entries the same way, each still on
         # ubuntu-latest/ubuntu-24.04-arm (Docker containers work fine on
         # GitHub-hosted runners for a compile-only build -- no GPU needed).
+        #
+        # -DOLLAMA_VERSION is required here: unlike a plain `go build`, the
+        # ollama-go CMake target (cmake/local.cmake) bakes its own -ldflags
+        # from this CMake variable, not from the GOFLAGS env var above --
+        # found live (v0.0.1-test run): without it the binary reported
+        # "0.0.0" regardless of GOFLAGS.
         run: |
-          cmake -S . -B build/local-superbuild ${{ matrix.cmake_args }}
+          cmake -S . -B build/local-superbuild -DOLLAMA_VERSION="${VERSION}" ${{ matrix.cmake_args }}
           CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) cmake --build build/local-superbuild --target ollama-local -- -l $(nproc)
       - name: Package
         run: |
