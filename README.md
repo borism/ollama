@@ -54,33 +54,30 @@ per-request overrides, and current limitations.
 
 ## Download
 
-### macOS
+**No release has shipped yet.** `scripts/install.sh` is ready and pulls
+from this fork's own [GitHub Releases](https://github.com/borism/ollama-cluster/releases)
+(not ollama.com), but no tag has been published -- see
+[`docs/releasing.md`](docs/releasing.md) for the release pipeline's
+scope, current gaps, and how to cut one.
+
+### macOS / Linux (once a release exists)
 
 ```shell
-curl -fsSL https://ollama.com/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/borism/ollama-cluster/main/scripts/install.sh | sh
 ```
 
-or [download manually](https://ollama.com/download/Ollama.dmg)
+CPU-only on both platforms, and unsigned on macOS, for now -- see
+`docs/releasing.md`.
 
 ### Windows
 
-```shell
-irm https://ollama.com/install.ps1 | iex
-```
-
-or [download manually](https://ollama.com/download/OllamaSetup.exe)
-
-### Linux
-
-```shell
-curl -fsSL https://ollama.com/install.sh | sh
-```
-
-[Manual install instructions](https://docs.ollama.com/linux#manual-install)
+Not built by this fork yet.
 
 ### Docker
 
-The official [Ollama Docker image](https://hub.docker.com/r/ollama/ollama) `ollama/ollama` is available on Docker Hub.
+Not published by this fork -- the official
+[`ollama/ollama`](https://hub.docker.com/r/ollama/ollama) image is
+upstream Ollama, not this fork's cluster feature.
 
 ### Libraries
 
@@ -192,7 +189,7 @@ console.log(response.message.content);
 - [REST API reference](https://docs.ollama.com/api)
 - [Importing models](https://docs.ollama.com/import)
 - [Modelfile reference](https://docs.ollama.com/modelfile)
-- [Building from source](https://github.com/ollama/ollama/blob/main/docs/development.md)
+- [Building from source](docs/development.md)
 
 ## Community Integrations
 
