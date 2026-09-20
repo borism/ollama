@@ -226,6 +226,19 @@ var (
 	NoPrune = Bool("OLLAMA_NOPRUNE")
 	// SchedSpread allows scheduling models across all GPUs.
 	SchedSpread = Bool("OLLAMA_SCHED_SPREAD")
+	// Cluster turns on LAN autodiscovery of other ollama-cluster instances
+	// (see cluster.Start) and, unless ClusterShare is set false, donating
+	// this instance's spare GPU capacity as an RPC worker for them
+	// (llm.StartRPCWorker). Opt-in: RPC is documented insecure upstream
+	// (tools/rpc/README.md), this assumes a trusted LAN.
+	Cluster = Bool("OLLAMA_CLUSTER")
+	// ClusterShare controls whether this instance advertises spare GPU
+	// capacity to the cluster; only meaningful when Cluster is on. Default
+	// true -- set OLLAMA_CLUSTER_SHARE=0 to consume peers' capacity
+	// without donating this instance's own.
+	ClusterShare = BoolWithDefault("OLLAMA_CLUSTER_SHARE")
+	// ClusterPort is the UDP port used for cluster discovery beacons.
+	ClusterPort = Uint("OLLAMA_CLUSTER_PORT", 11435)
 	// ContextLength sets the default context length
 	ContextLength = Uint("OLLAMA_CONTEXT_LENGTH", 0)
 	// Auth enables authentication between the Ollama client and server

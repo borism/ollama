@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/ollama/ollama/api"
+	"github.com/ollama/ollama/cluster"
 	"github.com/ollama/ollama/discover"
 	"github.com/ollama/ollama/envconfig"
 	"github.com/ollama/ollama/format"
@@ -79,6 +80,11 @@ type Scheduler struct {
 	getGpuFn        func(ctx context.Context, runners []ml.FilteredRunnerDiscovery) []ml.DeviceInfo
 	getSystemInfoFn func() ml.SystemInfo
 	waitForRecovery time.Duration
+
+	// clusterTable is the live set of ollama-cluster peers (nil unless
+	// OLLAMA_CLUSTER is set -- see cmd/cluster.go), consulted in load() to
+	// auto-fill RPCServers when a model doesn't fit locally.
+	clusterTable *cluster.Table
 }
 
 // Default automatic value for number of models we allow per GPU
@@ -108,6 +114,19 @@ func InitScheduler(ctx context.Context) *Scheduler {
 // schedulerModelKey returns the scheduler map key for a model.
 // GGUF-backed models use ModelPath; safetensors/image models without a
 // ModelPath use manifest digest so distinct models don't collide.
+// clusterLoad reports a coarse 0..1 utilization for cluster discovery's
+// SelfLoad -- a secondary signal alongside FreeMemory (see cluster.Peer)
+// to discourage borrowing from an instance that's already busy loading or
+// running several models.
+func (s *Scheduler) clusterLoad() float64 {
+	s.loadedMu.Lock()
+	defer s.loadedMu.Unlock()
+	if s.activeLoading != nil {
+		return 1
+	}
+	return min(1, float64(len(s.loaded))/float64(defaultModelsPerGPU))
+}
+
 func schedulerModelKey(m *Model) string {
 	if m == nil {
 		return ""
@@ -539,7 +558,11 @@ func (s *Scheduler) load(req *LlmRequest, systemInfo ml.SystemInfo, gpus []ml.De
 
 			predictedCtx := effectiveLlamaServerContext(req.opts.NumCtx, f, numParallel)
 			predicted := llm.PredictServerVRAM(req.model.ModelPath, f, predictedCtx)
-			loadGpus, launchOpts = selectLlamaServerPlacement(systemInfo, gpus, predicted, req.opts)
+			reqOpts := req.opts
+			if s.clusterTable != nil && (reqOpts.RPCAuto == nil || *reqOpts.RPCAuto) {
+				reqOpts = cluster.SelectRPCServers(gpus, predicted, s.clusterTable.Peers(), reqOpts)
+			}
+			loadGpus, launchOpts = selectLlamaServerPlacement(systemInfo, gpus, predicted, reqOpts)
 			availableForBatch, _, _ := availableMemoryForPlacement(systemInfo, loadGpus, launchOpts)
 			flashAttention := llm.LlamaServerFlashAttention(loadGpus)
 			req.applyAutomaticGenerationBatch(completion, predictedCtx, predicted, availableForBatch, flashAttention, loadGpus)

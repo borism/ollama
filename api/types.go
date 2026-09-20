@@ -599,6 +599,12 @@ type Runner struct {
 	// or Modelfile PARAMETER -- passed straight through to llama-server's
 	// own "--rpc" flag and its normal auto placement, not computed here.
 	RPCServers string `json:"rpc_servers,omitempty"`
+	// RPCAuto overrides the server's OLLAMA_CLUSTER policy for this one
+	// request: nil follows server policy, false forces local-only even
+	// with cluster mode on, true opts in even under a future lower-
+	// priority policy. Ignored once RPCServers is set explicitly (see
+	// cluster.SelectRPCServers).
+	RPCAuto *bool `json:"rpc_auto,omitempty"`
 }
 
 // EmbedRequest is the request passed to [Client.Embed].
