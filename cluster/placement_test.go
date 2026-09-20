@@ -1,7 +1,9 @@
 package cluster
 
 import (
+	"math"
 	"testing"
+	"time"
 
 	"github.com/borism/ollama-cluster/api"
 	"github.com/borism/ollama-cluster/ml"
@@ -19,6 +21,13 @@ func peer(addr string, rpcPort int, protoMajor, protoMinor int, freeMB uint64) P
 		ProtoMinor: protoMinor,
 		Devices:    []ml.DeviceInfo{gpu(freeMB)},
 	}
+}
+
+func peerAt(addr string, freeMB uint64, load float64, latency time.Duration) Peer {
+	p := peer(addr, 50052, RPCProtoMajor, 0, freeMB)
+	p.Load = load
+	p.Latency = latency
+	return p
 }
 
 func mib(n uint64) uint64 { return n * 1024 * 1024 }
@@ -115,5 +124,62 @@ func TestSelectRPCServers(t *testing.T) {
 				t.Errorf("RPCServers = %q, want %q", got.RPCServers, c.wantRPCs)
 			}
 		})
+	}
+}
+
+// TestSelectRPCServersMinUsefulMemory: a peer with less than minUsefulMemory
+// free is never worth the hop, even as the only candidate.
+func TestSelectRPCServersMinUsefulMemory(t *testing.T) {
+	got := SelectRPCServers(
+		[]ml.DeviceInfo{gpu(100)},
+		mib(10000),
+		[]Peer{peer("10.0.0.2", 50052, RPCProtoMajor, 0, 1000)},
+		api.Options{},
+	)
+	if got.RPCServers != "" {
+		t.Fatalf("RPCServers = %q, want empty (peer below minUsefulMemory)", got.RPCServers)
+	}
+}
+
+// TestSelectRPCServersPrefersLowLoad: two peers with equal free memory but
+// different self-reported load. The idle one should be used to its full
+// capacity and listed first; the busy one only covers the remainder.
+func TestSelectRPCServersPrefersLowLoad(t *testing.T) {
+	busy := peerAt("10.0.0.2", 5000, 0.9, 0)
+	idle := peerAt("10.0.0.3", 5000, 0, 0)
+
+	got := SelectRPCServers([]ml.DeviceInfo{gpu(100)}, mib(6000), []Peer{busy, idle}, api.Options{})
+	want := "10.0.0.3:50052,10.0.0.2:50052"
+	if got.RPCServers != want {
+		t.Fatalf("RPCServers = %q, want %q", got.RPCServers, want)
+	}
+}
+
+// TestSelectRPCServersPrefersLowLatency: two peers with equal free memory
+// and load, but different measured link latency. The near one should be
+// used to its full capacity and listed first.
+func TestSelectRPCServersPrefersLowLatency(t *testing.T) {
+	near := peerAt("10.0.0.2", 5000, 0, 0)
+	far := peerAt("10.0.0.3", 5000, 0, 2*time.Second)
+
+	got := SelectRPCServers([]ml.DeviceInfo{gpu(100)}, mib(6000), []Peer{near, far}, api.Options{})
+	want := "10.0.0.2:50052,10.0.0.3:50052"
+	if got.RPCServers != want {
+		t.Fatalf("RPCServers = %q, want %q", got.RPCServers, want)
+	}
+}
+
+// TestWaterFill exercises the bisection directly: equal rate/link splits
+// proportionally to cap, and a shortfall no combination can fully cover
+// still saturates every device at its own cap rather than returning zero.
+func TestWaterFill(t *testing.T) {
+	fracs := waterFill([]float64{1, 1}, []float64{0, 0}, []float64{0.6, 0.6})
+	if math.Abs(fracs[0]-0.5) > 1e-6 || math.Abs(fracs[1]-0.5) > 1e-6 {
+		t.Fatalf("equal devices under cap: got %v, want [0.5 0.5]", fracs)
+	}
+
+	fracs = waterFill([]float64{1, 1}, []float64{0, 0}, []float64{0.2, 0.3})
+	if math.Abs(fracs[0]-0.2) > 1e-6 || math.Abs(fracs[1]-0.3) > 1e-6 {
+		t.Fatalf("unsatisfiable: got %v, want [0.2 0.3] (both maxed at their cap)", fracs)
 	}
 }

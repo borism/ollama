@@ -43,6 +43,13 @@ type Peer struct {
 	// technically not full but is busy.
 	Load float64
 
+	// Latency is our own last-measured round trip to this peer's RPC port
+	// (a timed TCP dial, see discovery.go's probeLoop) -- zero until the
+	// first successful probe. Unlike Load and Devices, this is not
+	// self-reported: it depends on the path from *this* node, which the
+	// peer can't know.
+	Latency time.Duration
+
 	// LastSeen is when we last heard this peer's beacon.
 	LastSeen time.Time
 }

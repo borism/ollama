@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 
@@ -11,6 +12,10 @@ import (
 )
 
 // RPCProtoMajor/RPCProtoMinor are defined in discovery.go.
+
+// minUsefulMemory: a peer with less spare memory than this isn't worth
+// an RPC hop for.
+const minUsefulMemory = 2048 * 1024 * 1024 // 2 GiB
 
 // localAvailable is the same "usable free memory" convention
 // server/sched.go's load() applies per GPU before deciding placement
@@ -39,20 +44,73 @@ func peerFreeMemory(p Peer) uint64 {
 }
 
 func usablePeer(p Peer) bool {
-	return p.RPCPort != 0 && p.ProtoMajor == RPCProtoMajor && p.ProtoMinor <= RPCProtoMinor
+	return p.RPCPort != 0 && p.ProtoMajor == RPCProtoMajor && p.ProtoMinor <= RPCProtoMinor &&
+		peerFreeMemory(p) >= minUsefulMemory
+}
+
+// waterFill picks frac_i minimizing the shared completion time
+// max_i(frac_i/rates[i] + links[i]), subject to sum(frac_i) <= 1 and
+// 0 <= frac_i <= caps[i] -- standard water-filling for a divisible load
+// across heterogeneous workers, solved by bisection on T: frac_i(T) =
+// clamp(rates[i]*(T-links[i]), 0, caps[i]) is monotonically
+// non-decreasing in T, so bisect for the T where the sum hits 1 (or, if
+// total capacity can't reach 1, converges with every peer maxed at its
+// own cap -- the correct "everyone helps as much as they can" answer).
+func waterFill(rates, links, caps []float64) []float64 {
+	fracsAt := func(t float64) []float64 {
+		out := make([]float64, len(rates))
+		for i := range rates {
+			out[i] = math.Max(0, math.Min(caps[i], rates[i]*(t-links[i])))
+		}
+		return out
+	}
+
+	hi := 0.0
+	for _, l := range links {
+		hi = math.Max(hi, l)
+	}
+	for i := range rates {
+		if rates[i] > 0 {
+			hi = math.Max(hi, caps[i]/rates[i])
+		}
+	}
+	hi += 1.0
+
+	lo := 0.0
+	for range 60 {
+		mid := (lo + hi) / 2
+		sum := 0.0
+		for _, f := range fracsAt(mid) {
+			sum += f
+		}
+		if sum < 1.0 {
+			lo = mid
+		} else {
+			hi = mid
+		}
+	}
+	return fracsAt(hi)
 }
 
 // SelectRPCServers decides whether opts should spill onto cluster peers to
 // fit a model whose predicted VRAM need is `predicted`, and if so fills in
 // opts.RPCServers (see api.Runner.RPCServers, llm/llama_server.go's
 // appendRPCArgs -- this function only needs to produce that string, nothing
-// downstream needs to change). Pure function: no network calls, just a
-// decision over the snapshot it's given.
+// downstream needs to change). Pure function: no network calls -- peer
+// link latency arrives pre-measured on Peer.Latency (see discovery.go's
+// probeLoop), so this is just a decision over the snapshot it's given.
 //
-// Memory-proportional only (a simple greedy fallback, not a novel
-// algorithm): peers are ranked by free memory and added
-// greedily until the shortfall is covered. No speed-aware water-fill --
-// that needs bench data this function doesn't have.
+// Speed-aware water-fill: peers are weighted by self-reported headroom
+// (1-Load) and measured link latency, not just free memory, and every peer
+// with a positive share ends up in the list (splitting a shortfall across
+// several half-free peers can beat parking it all on the one biggest peer).
+// The actual byte split across included servers is still llama.cpp's own
+// job (automatic, proportional to each device's reported free memory);
+// this only decides which peers are worth the hop and in what
+// priority order. rates[i] is a 0..1 headroom score, not a measured
+// tokens/sec -- a real per-device throughput bench is still a
+// fast-follow, this just stops ignoring the signals
+// already on hand (load, network latency, a minimum-useful-memory floor).
 func SelectRPCServers(gpus []ml.DeviceInfo, predicted uint64, peers []Peer, opts api.Options) api.Options {
 	if opts.RPCServers != "" {
 		return opts
@@ -62,6 +120,7 @@ func SelectRPCServers(gpus []ml.DeviceInfo, predicted uint64, peers []Peer, opts
 	if local >= predicted {
 		return opts
 	}
+	shortfall := float64(predicted - local)
 
 	usable := make([]Peer, 0, len(peers))
 	for _, p := range peers {
@@ -73,18 +132,35 @@ func SelectRPCServers(gpus []ml.DeviceInfo, predicted uint64, peers []Peer, opts
 		return opts
 	}
 
-	sort.SliceStable(usable, func(i, j int) bool {
-		return peerFreeMemory(usable[i]) > peerFreeMemory(usable[j])
+	rates := make([]float64, len(usable))
+	links := make([]float64, len(usable))
+	caps := make([]float64, len(usable))
+	for i, p := range usable {
+		// Floored so a fully-busy peer still gets a small share instead of
+		// a zero rate that a network hiccup could then divide by.
+		rates[i] = math.Max(0.05, 1-p.Load)
+		links[i] = p.Latency.Seconds()
+		caps[i] = float64(peerFreeMemory(p)) / shortfall
+	}
+	fracs := waterFill(rates, links, caps)
+
+	type share struct {
+		peer Peer
+		frac float64
+	}
+	picked := make([]share, 0, len(usable))
+	for i, p := range usable {
+		if fracs[i] > 0 {
+			picked = append(picked, share{p, fracs[i]})
+		}
+	}
+	sort.SliceStable(picked, func(i, j int) bool {
+		return picked[i].frac > picked[j].frac
 	})
 
-	cum := local
-	addrs := make([]string, 0, len(usable))
-	for _, p := range usable {
-		if cum >= predicted {
-			break
-		}
-		addrs = append(addrs, fmt.Sprintf("%s:%d", p.Addr, p.RPCPort))
-		cum += peerFreeMemory(p)
+	addrs := make([]string, len(picked))
+	for i, s := range picked {
+		addrs[i] = fmt.Sprintf("%s:%d", s.peer.Addr, s.peer.RPCPort)
 	}
 
 	opts.RPCServers = strings.Join(addrs, ",")

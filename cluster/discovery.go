@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"strconv"
 	"sync"
 	"time"
 
@@ -79,6 +80,18 @@ func (t *Table) observe(p Peer) {
 	t.peers[p.ID] = p
 }
 
+// setLatency records a freshly-probed round trip for an already-known
+// peer (see probeLoop). A no-op if the peer expired between listing and
+// probing -- nothing to update.
+func (t *Table) setLatency(id string, d time.Duration) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	if p, ok := t.peers[id]; ok {
+		p.Latency = d
+		t.peers[id] = p
+	}
+}
+
 // randomID returns a random hex string for use as a self ID, for
 // convenience when Config.SelfID is left empty.
 func randomID() string {
@@ -111,6 +124,7 @@ func Start(ctx context.Context, cfg Config) (*Table, error) {
 
 	go broadcastLoop(ctx, conn, cfg, t)
 	go listenLoop(ctx, conn, cfg, t)
+	go probeLoop(ctx, t)
 
 	go func() {
 		<-ctx.Done()
@@ -226,6 +240,44 @@ func broadcastLoop(ctx context.Context, conn *net.UDPConn, cfg Config, t *Table)
 			return
 		case <-ticker.C:
 			send()
+		}
+	}
+}
+
+// probeInterval/probeTimeout govern probeLoop's link-latency measurement
+// to known peers, consumed by placement.go's water-fill.
+const (
+	probeInterval = 10 * time.Second
+	probeTimeout  = 500 * time.Millisecond
+)
+
+// probeLoop periodically times a TCP dial to each live peer's RPC port and
+// records it as that peer's Latency. This is a real measurement, not a
+// placeholder: the dial's handshake is one round trip over the same link
+// the RPC traffic itself would use. A peer that fails to answer just keeps
+// its last-known latency (or zero, if never probed) -- water-fill treats
+// that as "no measured cost yet" rather than excluding the peer.
+func probeLoop(ctx context.Context, t *Table) {
+	ticker := time.NewTicker(probeInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			for _, p := range t.Peers() {
+				if p.RPCPort == 0 {
+					continue
+				}
+				addr := net.JoinHostPort(p.Addr, strconv.Itoa(p.RPCPort))
+				start := time.Now()
+				conn, err := net.DialTimeout("tcp", addr, probeTimeout)
+				if err != nil {
+					continue
+				}
+				conn.Close()
+				t.setLatency(p.ID, time.Since(start))
+			}
 		}
 	}
 }
