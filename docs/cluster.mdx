@@ -1,0 +1,86 @@
+---
+title: Cluster (experimental)
+---
+
+`ollama-cluster` lets a group of machines on the same LAN share GPU capacity
+for a single inference request, using [llama.cpp's RPC
+backend](https://github.com/ggml-org/llama.cpp/blob/master/tools/rpc/README.md).
+When a model doesn't fit in one machine's VRAM, layers spill onto another
+machine's spare GPU automatically — no manual `--rpc` flags, no static peer
+list.
+
+This is off by default and opt-in per machine.
+
+## How it's different from EXO
+
+If you've used [EXO](https://github.com/exo-explore/exo): the peer-discovery
+and zero-config idea is the same, but the topology isn't. llama.cpp's RPC
+protocol is client/server with no worker-to-worker traffic — a worker only
+ever talks to the machine that's driving the current request, never to
+another worker. So `ollama-cluster` is hub-and-spoke, not a mesh: one machine
+is the head for a given request (running `llama-server`, deciding the split)
+and the rest are spare capacity it borrows. Any machine can be the head for
+its own requests while donating capacity to someone else's at the same time,
+but there's no ring/mesh scaling across many hops the way EXO's peer
+election does. For most home/office LANs (a handful of boxes) this has no
+practical downside; it's a real ceiling if you're trying to pool a much
+larger number of nodes.
+
+## Enabling it
+
+```shell
+OLLAMA_CLUSTER=1 ollama serve
+```
+
+Do this on every machine that should participate. Each instance broadcasts
+a discovery beacon on the LAN and builds a table of peers automatically —
+nothing to configure on a same-subnet network.
+
+Once two or more instances are running with `OLLAMA_CLUSTER=1`, a request
+for a model that doesn't fit locally will automatically pick a peer with
+free GPU memory and pass it to `llama-server` as an RPC worker.
+
+## Environment variables
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `OLLAMA_CLUSTER` | off | Turn on LAN discovery and (unless disabled below) donate spare GPU capacity to peers. |
+| `OLLAMA_CLUSTER_SHARE` | `true` | Set to `0`/`false` to discover and use peers' capacity without donating this machine's own. |
+| `OLLAMA_CLUSTER_PORT` | `11435` | UDP port used for discovery beacons. Must match across a fleet if changed. |
+| `OLLAMA_CLUSTER_SEEDS` | none | Comma-separated `host:port` list of peers to unicast directly to, for reaching machines outside this host's broadcast domain (a different subnet or VLAN — broadcast discovery doesn't cross those). Not needed on a flat LAN. |
+| `OLLAMA_CLUSTER_PLACEMENT` | `waterfill` | How peers are chosen when more than one has spare capacity: `waterfill` weighs peers by measured load and latency and can spread a shortfall across several; `greedy` instead just ranks by free memory and adds peers until the shortfall's covered. |
+
+## Per-request overrides
+
+These are also settable per API request or Modelfile `PARAMETER`, taking
+priority over the server's environment-variable policy for that one request:
+
+- `rpc_servers` — a literal `"host:port,host:port"` list, bypassing
+  discovery/placement entirely and passed straight to llama-server's `--rpc`.
+- `rpc_auto` — `true`/`false` to force cluster spillover on or off for one
+  request regardless of server policy. Ignored once `rpc_servers` is set.
+- `rpc_placement` — `"greedy"` or `"waterfill"` for one request. Ignored
+  once `rpc_servers` is set.
+- `tensor_split` — manual override for how much of the model each device
+  gets (llama-server's `--tensor-split`). Note the device order: since
+  Ollama never passes `--device`, every RPC peer sorts *before* every local
+  GPU, so with one local GPU and one RPC peer, `tensor_split[0]` is the
+  peer and `tensor_split[1]` is local. Leave unset to let llama-server's
+  own `--fit` compute the split from live free memory.
+
+## Security
+
+llama.cpp's RPC backend is documented upstream as a proof of concept and
+**not secure** — assume anyone who can reach the port can use it. Only
+enable `OLLAMA_CLUSTER` on a trusted LAN or VPN (e.g. Tailscale, WireGuard),
+never on an open network.
+
+## Current limitations
+
+- Hub-and-spoke only (see above) — no multi-hop mesh across peers.
+- Placement weighs each peer's self-reported load and a measured
+  round-trip latency, not a real measured tokens/sec benchmark per device
+  yet.
+- Cross-subnet discovery via `OLLAMA_CLUSTER_SEEDS` is implemented and
+  unit-tested but has limited real-world mileage so far — same-subnet
+  broadcast discovery is the well-exercised path.

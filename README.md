@@ -8,6 +8,39 @@
 
 Start building with open models.
 
+## Cluster (this fork, experimental)
+
+[`borism/ollama-cluster`](https://github.com/borism/ollama-cluster) is a fork
+of Ollama that adds opt-in LAN autodiscovery and automatic
+[llama.cpp RPC](https://github.com/ggml-org/llama.cpp/blob/master/tools/rpc/README.md)
+spillover: when a model doesn't fit in one machine's VRAM, layers spill onto
+a peer's spare GPU automatically — no manual `--rpc` flags, no static peer
+list.
+
+```shell
+OLLAMA_CLUSTER=1 ollama serve
+```
+
+Run that on every machine that should participate on the LAN. Each instance
+broadcasts a discovery beacon, finds the others, and shares GPU capacity for
+requests that need it — the rest of Ollama's UX (pull, run, the API) is
+unchanged.
+
+- **Opt-in and per-machine.** A machine can consume peers' capacity without
+  donating its own (`OLLAMA_CLUSTER_SHARE=0`), or vice versa.
+- **Hub-and-spoke, not a mesh.** llama.cpp's RPC protocol is client/server
+  with no worker-to-worker traffic, so unlike
+  [EXO](https://github.com/exo-explore/exo)'s peer-election ring, one
+  machine is always the head for a given request and the rest are spare
+  capacity it borrows — no multi-hop scaling across many peers. Any machine
+  can be the head for its own requests while donating to someone else's at
+  the same time.
+- **Insecure by design, same as upstream llama.cpp RPC.** Only enable this
+  on a trusted LAN or VPN (Tailscale, WireGuard), never on an open network.
+
+See [`docs/cluster.mdx`](docs/cluster.mdx) for environment variables,
+per-request overrides, and current limitations.
+
 ## Download
 
 ### macOS
