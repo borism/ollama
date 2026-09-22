@@ -48,7 +48,8 @@ tart --version
 ```
 
 Add `export TART_HOME=/Volumes/T9/tart-home` to your shell profile
-(`~/.zshrc`) so it's always set — every `tart` command below, and
+(`~/.bash_profile` — Terminal.app runs bash as a login shell by default,
+not `~/.bashrc`) so it's always set — every `tart` command below, and
 `scripts/mac-ci/ephemeral-darwin-runner.sh`, assumes it.
 
 ## 2. Create the base VM from a fresh macOS IPSW
