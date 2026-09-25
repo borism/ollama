@@ -217,6 +217,16 @@ Once this is done, cutting a release is: run
 wherever) `git push origin vX.Y.Z`. The script blocks until the job
 completes, cleans up after itself either way (including on Ctrl-C).
 
+It needs a runner registration token. Without `REG_TOKEN` set it calls
+`gh` on the Mac, which must then be logged in with admin on the repo. The
+Mac doesn't need `gh` at all if the token comes from elsewhere — a machine
+where `gh` is logged in, or the repo's Settings → Actions → Runners → New
+runner page (valid for an hour):
+
+```shell
+ssh <mac> "REG_TOKEN=$(gh api repos/borism/ollama-cluster/actions/runners/registration-token --method POST --jq .token) ./scripts/mac-ci/ephemeral-darwin-runner.sh"
+```
+
 ## Rebuilding the golden image later
 
 Toolchain updates (new Xcode, new cmake/go) mean redoing steps 2-7 against

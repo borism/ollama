@@ -63,8 +63,10 @@ until "$TART" exec "${CLONE_NAME}" true >/dev/null 2>&1; do
     sleep 2
 done
 
-echo ">>> Fetching a fresh runner registration token (expires in ~1 hour, single-use registration)"
-REG_TOKEN=$(gh api "repos/${REPO}/actions/runners/registration-token" --method POST --jq .token)
+# REG_TOKEN can come from anywhere with admin on the repo (another box's gh,
+# or Settings -> Actions -> Runners -> New runner); gh here is only the fallback.
+echo ">>> Runner registration token (expires in ~1 hour, single-use registration)"
+REG_TOKEN=${REG_TOKEN:-$(gh api "repos/${REPO}/actions/runners/registration-token" --method POST --jq .token)}
 
 echo ">>> Registering + running the ephemeral runner inside the guest (blocks until it picks up and finishes one job)"
 "$TART" exec "${CLONE_NAME}" bash -lc "
