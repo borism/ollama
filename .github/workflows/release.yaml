@@ -113,75 +113,124 @@ jobs:
           name: bundles-darwin
           path: dist/ollama-darwin.tgz
 
-  linux-build:
+  # Linux: the same Dockerfile stages stock Ollama's release builds
+  # (upstream release.yaml's linux-depends matrix, scripts/build_linux.sh's
+  # tarball split), one backend per job so each gets a whole runner.
+  #
+  # ponytail: GitHub-hosted runners, no registry layer cache -- every
+  # release rebuilds every backend from scratch (upstream caches layers in a
+  # Docker Hub registry; the ROCm base alone is ~9 GB compressed). Upgrade
+  # path: docker/build-push-action cache-from/cache-to against a GHCR
+  # registry ref, same shape as upstream's. No MLX: upstream builds it with
+  # a 200 GB swap file, which a hosted runner can't do; it's the optional
+  # safetensors engine, shipped separately upstream anyway.
+  linux-depends:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - arch: amd64
-            runner: ubuntu-latest
-            cmake_args: ''
-          - arch: arm64
-            runner: ubuntu-24.04-arm
-            # ponytail: GGML_CPU_ALL_VARIANTS unconditionally registers an
-            # armv9.2+sme variant (ggml/src/CMakeLists.txt) with no
-            # compiler-capability check the way its PowerPC equivalent has
-            # -- ubuntu-24.04-arm's gcc rejects "+sme" as an invalid -march
-            # feature modifier, failing the whole build. Single baseline
-            # variant instead of runtime CPU dispatch; upgrade path: drop
-            # this once upstream guards that variant (or once this runner
-            # image ships a gcc that accepts +sme).
-            cmake_args: '-DGGML_CPU_ALL_VARIANTS=OFF'
-    runs-on: ${{ matrix.runner }}
+          - { arch: amd64, target: llama-server-cpu }
+          - { arch: amd64, target: llama-server-cuda_v12 }
+          - { arch: amd64, target: llama-server-cuda_v13 }
+          - { arch: amd64, target: llama-server-vulkan }
+          - { arch: amd64, target: llama-server-rocm_v7_2 }
+          - { arch: amd64, target: go }
+          - { arch: arm64, target: llama-server-cpu }
+          - { arch: arm64, target: llama-server-cuda_v12 }
+          - { arch: arm64, target: llama-server-cuda_v13 }
+          - { arch: arm64, target: llama-server-cuda_jetpack5 }
+          - { arch: arm64, target: llama-server-cuda_jetpack6 }
+          - { arch: arm64, target: go }
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     environment: release
     needs: setup-environment
-    env:
-      GOFLAGS: ${{ needs.setup-environment.outputs.GOFLAGS }}
-      VERSION: ${{ needs.setup-environment.outputs.VERSION }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache-dependency-path: |
-            go.sum
-            LLAMA_CPP_VERSION
-            MLX_VERSION
-            MLX_C_VERSION
-      - run: sudo apt-get update && sudo apt-get install -y cmake ccache
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/ccache
-          key: ccache-release-linux-${{ matrix.arch }}-${{ needs.setup-environment.outputs.vendorsha }}
-      - name: Build CPU-only native superbuild
-        # ponytail: CPU only -- CUDA/ROCm/Vulkan need per-backend SDK
-        # containers (see test.yaml's linux matrix) this job doesn't set up
-        # yet. Upgrade path: add matrix entries the same way, each still on
-        # ubuntu-latest/ubuntu-24.04-arm (Docker containers work fine on
-        # GitHub-hosted runners for a compile-only build -- no GPU needed).
-        #
-        # -DOLLAMA_VERSION is required here: unlike a plain `go build`, the
-        # ollama-go CMake target (cmake/local.cmake) bakes its own -ldflags
-        # from this CMake variable, not from the GOFLAGS env var above --
-        # found live (v0.0.1-test run): without it the binary reported
-        # "0.0.0" regardless of GOFLAGS.
+      - name: Free disk space
+        # The amd64 base image (rocm/dev-almalinux-8, shared by every amd64
+        # stage) and the JetPack images are ~5-9 GB compressed each; a
+        # stock hosted runner doesn't have room for them plus a build.
         run: |
-          cmake -S . -B build/local-superbuild -DOLLAMA_VERSION="${VERSION}" ${{ matrix.cmake_args }}
-          CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) cmake --build build/local-superbuild --target ollama-local -- -l $(nproc)
-      - name: Package
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+            /opt/hostedtoolcache /usr/local/share/boost /usr/share/swift /usr/local/share/powershell
+          sudo docker image prune --all --force
+          df -h /
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          target: publish-${{ matrix.target }}
+          outputs: type=local,dest=out
+          provenance: false
+          sbom: false
+          build-args: |
+            GOFLAGS=${{ needs.setup-environment.outputs.GOFLAGS }}
+      # tar first: upload-artifact drops symlinks and exec bits
+      - run: tar cf linux-${{ matrix.arch }}-${{ matrix.target }}.tar -C out . && ls -l *.tar && df -h /
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.arch }}-${{ matrix.target }}
+          path: linux-${{ matrix.arch }}-${{ matrix.target }}.tar
+          retention-days: 1
+          compression-level: 0
+
+  linux-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    environment: release
+    needs: [setup-environment, linux-depends]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: linux-${{ matrix.arch }}-*
+          path: parts
+          merge-multiple: true
+      - name: Assemble bin/ + lib/ollama
         run: |
-          mkdir -p dist pkg
-          cmake --install build/local-superbuild --component ollama-local --prefix pkg
+          mkdir pkg
+          for t in parts/*.tar; do tar xf "$t" -C pkg; done
+          ls pkg/lib/ollama
+      - name: Verify
+        run: |
           pkg/bin/ollama --version
           pkg/lib/ollama/llama-server --version
-          # Cluster RPC spillover needs both (cmake/local.cmake)
+          # Cluster RPC spillover needs both
           test -x pkg/lib/ollama/ggml-rpc-server
           ls pkg/lib/ollama/libggml-rpc*
-          tar czf dist/ollama-linux-${{ matrix.arch }}.tgz -C pkg bin lib
+          for d in cuda_v12 cuda_v13; do test -d pkg/lib/ollama/$d; done
+          if [ ${{ matrix.arch }} = amd64 ]; then
+            for d in vulkan rocm_v7_2; do test -d pkg/lib/ollama/$d; done
+          else
+            for d in cuda_jetpack5 cuda_jetpack6; do test -d pkg/lib/ollama/$d; done
+          fi
+      - name: Split into release tarballs
+        # Same split as scripts/build_linux.sh: GPU extras that most machines
+        # don't need (ROCm, JetPack) ship separately, and install.sh fetches
+        # them only when it detects that hardware.
+        run: |
+          mkdir dist
+          A=${{ matrix.arch }}
+          if [ $A = amd64 ]; then
+            tar c -C pkg --owner 0 --group 0 --exclude 'lib/ollama/rocm*' bin lib | zstd -19 -T0 >dist/ollama-linux-$A.tar.zst
+            tar c -C pkg --owner 0 --group 0 lib/ollama/rocm_v7_2 | zstd -19 -T0 >dist/ollama-linux-$A-rocm.tar.zst
+          else
+            tar c -C pkg --owner 0 --group 0 --exclude 'lib/ollama/cuda_jetpack*' bin lib | zstd -19 -T0 >dist/ollama-linux-$A.tar.zst
+            tar c -C pkg --owner 0 --group 0 lib/ollama/cuda_jetpack5 | zstd -19 -T0 >dist/ollama-linux-$A-jetpack5.tar.zst
+            tar c -C pkg --owner 0 --group 0 lib/ollama/cuda_jetpack6 | zstd -19 -T0 >dist/ollama-linux-$A-jetpack6.tar.zst
+          fi
+          ls -l dist
+          # GitHub release assets max out at 2 GiB
+          for f in dist/*; do [ $(stat -c%s "$f") -lt 2147483648 ] || { echo "::error::$f is over 2 GiB"; exit 1; }; done
       - uses: actions/upload-artifact@v4
         with:
           name: bundles-linux-${{ matrix.arch }}
-          path: dist/*.tgz
+          path: dist/*.tar.zst
+          compression-level: 0
 
   # Final release process
   release:
@@ -219,8 +268,11 @@ jobs:
         run: |
           required=(
             dist/install.sh
-            dist/ollama-linux-amd64.tgz
-            dist/ollama-linux-arm64.tgz
+            dist/ollama-linux-amd64.tar.zst
+            dist/ollama-linux-amd64-rocm.tar.zst
+            dist/ollama-linux-arm64.tar.zst
+            dist/ollama-linux-arm64-jetpack5.tar.zst
+            dist/ollama-linux-arm64-jetpack6.tar.zst
             dist/ollama-darwin.tgz
           )
           for payload in "${required[@]}"; do
@@ -260,7 +312,10 @@ jobs:
             done <<< "$assets"
           }
 
-          RELEASE_VERSION="${GITHUB_REF_NAME%%-*}"
+          # Upstream strips everything after the first '-' so -rcN builds
+          # fold into one release; this fork's tags carry a -cluster.N
+          # suffix that must stay distinct, so strip only an -rc suffix.
+          RELEASE_VERSION="${GITHUB_REF_NAME%-rc*}"
           echo "Looking for existing release for ${RELEASE_VERSION}"
           OLD_TAG=$(gh release ls --json name,tagName | jq -r --arg version "$RELEASE_VERSION" '.[] | select(.name == $version) | .tagName')
           if [ -n "$OLD_TAG" ]; then
@@ -280,7 +335,7 @@ jobs:
 
           shopt -s nullglob
           pids=()
-          for payload in dist/*.txt dist/*.tgz dist/*.sh ; do
+          for payload in dist/*.txt dist/*.tgz dist/*.tar.zst dist/*.sh ; do
             # Publish the checksum manifest only after every payload has succeeded.
             [ "$payload" = dist/sha256sum.txt ] && continue
             echo "Uploading $payload"
