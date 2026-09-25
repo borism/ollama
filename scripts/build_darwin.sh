@@ -140,15 +140,18 @@ _prepare_darwin_runtime() {
     mkdir -p dist/darwin
     lipo -create -output dist/darwin/ollama dist/darwin-amd64/ollama dist/darwin-arm64/ollama
     chmod +x dist/darwin/ollama
-    lipo dist/darwin/ollama -verify_arch x86_64 arm64
+    # Xcode 27 lipo takes one arch per -verify_arch
+    for arch in x86_64 arm64; do lipo dist/darwin/ollama -verify_arch $arch; done
 
     lipo -create -output dist/darwin/llama-server dist/darwin-amd64/lib/ollama/llama-server dist/darwin-arm64/lib/ollama/llama-server
     chmod +x dist/darwin/llama-server
-    lipo dist/darwin/llama-server -verify_arch x86_64 arm64
+    # Xcode 27 lipo takes one arch per -verify_arch
+    for arch in x86_64 arm64; do lipo dist/darwin/llama-server -verify_arch $arch; done
 
     lipo -create -output dist/darwin/llama-quantize dist/darwin-amd64/lib/ollama/llama-quantize dist/darwin-arm64/lib/ollama/llama-quantize
     chmod +x dist/darwin/llama-quantize
-    lipo dist/darwin/llama-quantize -verify_arch x86_64 arm64
+    # Xcode 27 lipo takes one arch per -verify_arch
+    for arch in x86_64 arm64; do lipo dist/darwin/llama-quantize -verify_arch $arch; done
 
     _merge_darwin_payload
 }
