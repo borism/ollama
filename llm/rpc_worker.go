@@ -103,7 +103,10 @@ func StartRPCWorker(port int, cacheDir string) (*RPCWorker, error) {
 		close(done)
 	}(cmd, w.done)
 
-	if err := w.waitUntilListening(10 * time.Second); err != nil {
+	// Generous on purpose: on Apple Silicon the first start after install
+	// compiles the Metal kernel libraries before listening (~22s on an M2
+	// Max; macOS caches them after). A dead process still fails fast.
+	if err := w.waitUntilListening(2 * time.Minute); err != nil {
 		w.Stop()
 		return nil, err
 	}
