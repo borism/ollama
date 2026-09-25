@@ -60,7 +60,13 @@ tart create ollama-cluster-darwin-golden --from-ipsw=latest --disk-size 100
 ```
 
 Downloads a full macOS installer (multi-GB) and installs it into a new VM
-disk on T9. Takes a while; let it finish.
+disk on T9. Takes a while; let it finish. Then give it more than Tart's
+default 4 CPUs / 4 GB (clones inherit this; GitHub's own macOS runners get
+7 GB+):
+
+```shell
+tart set ollama-cluster-darwin-golden --cpu 6 --memory 8192
+```
 
 ## 3. First boot: click through macOS Setup Assistant
 

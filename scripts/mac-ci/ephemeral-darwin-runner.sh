@@ -32,7 +32,7 @@ if [ ! -x "$TART" ]; then
     exit 1
 fi
 
-if ! "$TART" list | grep -q "^${GOLDEN_IMAGE} "; then
+if ! "$TART" list --quiet | grep -qx "${GOLDEN_IMAGE}"; then
     echo "ERROR: golden image '${GOLDEN_IMAGE}' not found -- see docs/mac-ci-runner-setup.md" >&2
     exit 1
 fi
