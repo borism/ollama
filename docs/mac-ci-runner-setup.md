@@ -5,11 +5,15 @@ on your own Mac (via [Tart](https://github.com/openai/tart), built on
 Apple's Virtualization.framework), so `darwin-build` doesn't cost anything
 and doesn't need GitHub billing sorted out.
 
-**Do all of this locally in Terminal.app on the Mac** (not over SSH — the
-`sshd` process needs Full Disk Access to write to an external volume and
-that grant has been flaky to get to actually apply without a reboot; local
-Terminal.app isn't affected. macOS's first-boot Setup Assistant also needs
-a graphical session regardless).
+**Over SSH, the external volume is blocked by default** (`Operation not
+permitted` on anything under `/Volumes/T9`, even though `df` works) — macOS
+privacy controls don't cover remote sessions unless you opt in. Rebooting
+doesn't fix it, and granting Full Disk Access to `sshd` doesn't either. The
+fix: System Settings → General → Sharing → Remote Login (ⓘ) → **Allow full
+disk access for remote users** (or add `/usr/libexec/sshd-keygen-wrapper` under
+Privacy & Security → Full Disk Access). New SSH sessions pick it up
+immediately. Local Terminal.app is unaffected either way, and step 3 (Setup
+Assistant) needs the graphical session regardless.
 
 ## Why this Mac, why an external SSD
 
