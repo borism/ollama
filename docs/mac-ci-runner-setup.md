@@ -37,15 +37,12 @@ PR from a fork could run arbitrary code on this Mac. Don't do that.
 
 ## 1. Install Tart onto the external SSD
 
-A verified copy may already be sitting in `/tmp/tart-install` from an
-earlier session (checksum-verified against `openai/tart`'s GitHub release).
-If not, download it fresh from
-<https://github.com/openai/tart/releases/latest> (`tart.tar.gz`, verify
-against the release's checksums file).
+Download it from <https://github.com/openai/tart/releases/latest>
+(`tart.tar.gz`, verify against the release's checksums file).
 
 ```shell
 mkdir -p /Volumes/T9/tart-home/bin
-mv /tmp/tart-install/tart.app /Volumes/T9/tart-home/bin/   # or wherever you extracted it
+mv tart.app /Volumes/T9/tart-home/bin/   # from wherever you extracted it
 export TART_HOME=/Volumes/T9/tart-home
 alias tart="$TART_HOME/bin/tart.app/Contents/MacOS/tart"
 tart --version
@@ -72,57 +69,113 @@ tart run ollama-cluster-darwin-golden
 ```
 
 A window opens showing the new "Mac"'s setup screen, like unboxing a real
-machine. Create a local account, then in System Settings on the guest:
+machine. **Skip the Apple ID sign-in** — it fails inside the VM (correct
+password rejected), and Recovery's password reset can't work either because
+it needs that same sign-in to "deactivate" the Mac. So **write the account
+password down**: forgetting it means recreating the VM. Then in System
+Settings on the guest:
 
 - **Users & Groups → Login Options → Automatic login** — set to that
   account. The ephemeral runner script needs a logged-in session waiting,
-  not a login screen, every time it clones and boots this image.
-- **General → Sharing → Remote Login** — turn on. `tart exec` (used by the
-  wrapper script) needs this.
+  not a login screen, every time it clones and boots this image (the guest
+  agent from step 5 runs inside that session).
+- **General → Sharing → Remote Login** — turn on, and in its (ⓘ) panel turn
+  on **Allow full disk access for remote users**. Only needed for setup over
+  SSH (`ssh <user>@$(tart ip ollama-cluster-darwin-golden)` from the host);
+  the runner itself uses `tart exec`.
 
 ## 4. Inside the guest: install the build toolchain
 
-Open Terminal inside the guest VM window.
+Xcode needs an Apple ID to download, which the guest can't do, so download
+the Xcode `.xip` **on the host** from
+<https://developer.apple.com/download/all/> and copy it in (`scp` from the
+host to the guest's IP). Xcode must support the guest's macOS version —
+Xcode 27 on a macOS 27 guest, for example; `tart create --from-ipsw=latest`
+picks the newest macOS the host supports.
 
-```shell
-xcode-select --install
-```
-
-Click through the GUI installer that pops up for Command Line Tools. That
-alone isn't enough, though — `darwin-build` needs the Metal toolchain
-(`xcrun --find metal`), which needs full Xcode: install it from the Mac App
-Store inside the guest, or download it from
-<https://developer.apple.com/download/all/> (needs an Apple ID either way).
-Then:
-
-```shell
-sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-xcodebuild -downloadComponent MetalToolchain
-xcodebuild -version   # note the Xcode version -- not required to be pinned
-                       # anywhere (this is a single dedicated machine, not
-                       # a shared image with several Xcodes side by side),
-                       # but useful to know for troubleshooting later
-```
-
-Install Homebrew, then the rest of the build toolchain:
+Install Homebrew **first**: its installer pulls in the Command Line Tools and
+switches `xcode-select` to them, which would undo the Xcode selection below
+and hide the Metal compiler.
 
 ```shell
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.bash_profile   # tart exec runs bash -l
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+eval "$(/opt/homebrew/bin/brew shellenv)"
 brew install cmake go ccache
+```
+
+Then Xcode (`darwin-build` needs the Metal toolchain, which the Command Line
+Tools alone don't have):
+
+```shell
+xip --expand ~/Xcode_*.xip && mv Xcode*.app /Applications/Xcode.app && rm ~/Xcode_*.xip
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+sudo xcodebuild -license accept
+sudo xcodebuild -runFirstLaunch
+xcodebuild -downloadComponent MetalToolchain
+xcrun --find metal     # must print a path
+xcodebuild -version    # note it for troubleshooting later
 ```
 
 ## 5. Install the Tart Guest Agent (needed for `tart exec`)
 
+The `cirruslabs/cli` Homebrew tap still has a formula, but it's stuck at an
+old version; the agent now lives at `openai/tart-guest-agent`. Install the
+release binary and run it as a launchd agent in the logged-in session (the
+plist is `cirruslabs/macos-image-templates`' `data/tart-guest-agent.plist`,
+with the working directory changed to your account's home):
+
 ```shell
-brew install cirruslabs/cli/tart-guest-agent
+V=0.15.0   # latest from https://github.com/openai/tart-guest-agent/releases
+B=https://github.com/openai/tart-guest-agent/releases/download/v$V
+cd "$(mktemp -d)"
+curl -fsSLO $B/tart-guest-agent-darwin-all.tar.gz
+curl -fsSLO $B/tart-guest-agent_${V}_checksums.txt
+grep " tart-guest-agent-darwin-all.tar.gz$" tart-guest-agent_${V}_checksums.txt | shasum -a 256 -c
+tar xzf tart-guest-agent-darwin-all.tar.gz
+install -m 755 tart-guest-agent /opt/homebrew/bin/
+
+cat > org.cirruslabs.tart-guest-agent.plist <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>Label</key>
+        <string>org.cirruslabs.tart-guest-agent</string>
+        <key>ProgramArguments</key>
+        <array>
+            <string>/opt/homebrew/bin/tart-guest-agent</string>
+            <string>--run-agent</string>
+        </array>
+        <key>EnvironmentVariables</key>
+        <dict>
+            <key>PATH</key>
+            <string>/bin:/usr/bin:/usr/sbin:/usr/local/bin:/opt/homebrew/bin</string>
+            <key>TERM</key>
+            <string>xterm-256color</string>
+        </dict>
+        <key>WorkingDirectory</key>
+        <string>$HOME</string>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>KeepAlive</key>
+        <true/>
+        <key>StandardOutPath</key>
+        <string>/tmp/tart-guest-agent.log</string>
+        <key>StandardErrorPath</key>
+        <string>/tmp/tart-guest-agent.log</string>
+    </dict>
+</plist>
+EOF
+sudo install -o root -g wheel -m 644 org.cirruslabs.tart-guest-agent.plist /Library/LaunchAgents/
+launchctl bootstrap gui/$(id -u) /Library/LaunchAgents/org.cirruslabs.tart-guest-agent.plist
 ```
 
-If that tap is also gone (the `cirruslabs` GitHub org's packages appear to
-have moved after an ownership change — its `ghcr.io` images returned 404
-when checked during setup), check
-<https://github.com/orgs/openai/repositories?q=tart> or the current Tart
-README for wherever the guest agent lives now before falling back to a
-from-source build.
+Check from the host: `tart exec ollama-cluster-darwin-golden bash -lc "xcrun
+--find metal; go version"`. Note: no `--` before the command — `tart exec`
+passes it through to the guest literally. A `failed to run vdagent` line in
+`/tmp/tart-guest-agent.log` is harmless (clipboard sharing, unused here).
 
 ## 6. Install the GitHub Actions runner software — don't register yet
 

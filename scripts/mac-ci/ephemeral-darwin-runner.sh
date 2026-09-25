@@ -50,26 +50,24 @@ echo ">>> Cloning ${GOLDEN_IMAGE} -> ${CLONE_NAME}"
 echo ">>> Booting ${CLONE_NAME} (no graphics)"
 "$TART" run "${CLONE_NAME}" --no-graphics >/tmp/"${CLONE_NAME}".log 2>&1 &
 
-echo ">>> Waiting for guest IP"
-IP=""
+# Wait for the guest agent (not just an IP): tart exec needs the logged-in
+# session's agent up, which lands a bit after networking.
+echo ">>> Waiting for the guest agent"
 i=0
-while [ "$i" -lt 60 ]; do
-    IP=$("$TART" ip "${CLONE_NAME}" 2>/dev/null || true)
-    [ -n "$IP" ] && break
+until "$TART" exec "${CLONE_NAME}" true >/dev/null 2>&1; do
     i=$((i + 1))
+    if [ "$i" -ge 90 ]; then
+        echo "ERROR: timed out waiting for ${CLONE_NAME}'s guest agent -- see /tmp/${CLONE_NAME}.log" >&2
+        exit 1
+    fi
     sleep 2
 done
-if [ -z "$IP" ]; then
-    echo "ERROR: timed out waiting for ${CLONE_NAME} to boot -- see /tmp/${CLONE_NAME}.log" >&2
-    exit 1
-fi
-echo ">>> Guest IP: ${IP}"
 
 echo ">>> Fetching a fresh runner registration token (expires in ~1 hour, single-use registration)"
 REG_TOKEN=$(gh api "repos/${REPO}/actions/runners/registration-token" --method POST --jq .token)
 
 echo ">>> Registering + running the ephemeral runner inside the guest (blocks until it picks up and finishes one job)"
-"$TART" exec "${CLONE_NAME}" -- bash -lc "
+"$TART" exec "${CLONE_NAME}" bash -lc "
     set -eu
     cd ~/actions-runner
     ./config.sh --url 'https://github.com/${REPO}' --token '${REG_TOKEN}' \
