@@ -102,6 +102,8 @@ jobs:
           cp dist/darwin/ollama pkg/bin/ollama
           cp dist/darwin/llama-server dist/darwin/llama-quantize pkg/lib/ollama/
           cp -a dist/darwin/lib/ollama/. pkg/lib/ollama/
+          # Cluster RPC worker (arm64's RPC backend is linked into llama-server)
+          test -x pkg/lib/ollama/ggml-rpc-server
           tar czf dist/ollama-darwin.tgz -C pkg bin lib
       - name: Log build results
         run: |
@@ -172,6 +174,9 @@ jobs:
           cmake --install build/local-superbuild --component ollama-local --prefix pkg
           pkg/bin/ollama --version
           pkg/lib/ollama/llama-server --version
+          # Cluster RPC spillover needs both (cmake/local.cmake)
+          test -x pkg/lib/ollama/ggml-rpc-server
+          ls pkg/lib/ollama/libggml-rpc*
           tar czf dist/ollama-linux-${{ matrix.arch }}.tgz -C pkg bin lib
       - uses: actions/upload-artifact@v4
         with:

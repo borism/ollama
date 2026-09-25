@@ -101,7 +101,7 @@ _merge_darwin_payload() {
             [ -e "$F" ] || continue
             BASE=$(basename "$F")
             case "$BASE" in
-                llama-server|llama-quantize|mlx_*) continue ;;
+                llama-server|llama-quantize|ggml-rpc-server|mlx_*) continue ;;
             esac
             [ -e "dist/darwin/lib/ollama/$BASE" ] || cp -P "$F" dist/darwin/lib/ollama/
         done
@@ -154,6 +154,12 @@ _prepare_darwin_runtime() {
     for arch in x86_64 arm64; do lipo dist/darwin/llama-quantize -verify_arch $arch; done
 
     _merge_darwin_payload
+
+    # Cluster RPC worker (OLLAMA_CLUSTER_SHARE); looked up in lib/ollama.
+    # The merge above skips it -- first-wins would ship the x86_64 copy only.
+    lipo -create -output dist/darwin/lib/ollama/ggml-rpc-server dist/darwin-amd64/lib/ollama/ggml-rpc-server dist/darwin-arm64/lib/ollama/ggml-rpc-server
+    chmod +x dist/darwin/lib/ollama/ggml-rpc-server
+    for arch in x86_64 arm64; do lipo dist/darwin/lib/ollama/ggml-rpc-server -verify_arch $arch; done
 }
 
 _create_darwin_runtime_tarball() {

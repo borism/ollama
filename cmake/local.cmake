@@ -692,10 +692,15 @@ if(OLLAMA_HAVE_LLAMA_SERVER)
             list(APPEND _cpu_args -DGGML_METAL=OFF)
         endif()
     endif()
+    # Cluster RPC spillover (llama/server/CMakePresets.json's "default" sets
+    # the same, but this build doesn't use presets): the ggml-rpc backend
+    # for --rpc, and ggml-rpc-server for OLLAMA_CLUSTER_SHARE. Both are
+    # installed by llama/server/CMakeLists.txt's base-dir glob.
+    list(APPEND _cpu_args -DGGML_RPC=ON -DGGML_RPC_RDMA=OFF)
 
     ollama_add_llama_server_build(local
         RUNNER_DIR ""
-        TARGETS llama-server llama-quantize
+        TARGETS llama-server llama-quantize ggml-rpc ggml-rpc-server
         CMAKE_ARGS ${_cpu_args})
 
     add_custom_target(ollama-local ALL
