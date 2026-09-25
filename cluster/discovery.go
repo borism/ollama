@@ -17,12 +17,13 @@ import (
 
 // RPCProtoMajor/RPCProtoMinor are the RPC_PROTO_MAJOR_VERSION/
 // RPC_PROTO_MINOR_VERSION this build's vendored llama.cpp speaks
-// (ggml/include/ggml-rpc.h). Bump these if the vendored llama.cpp pin in
-// this fork changes. Note: cluster/placement.go independently defines the same
-// two constants with the same names/values -- expected, they'll dedupe at
-// merge time.
+// (ggml/include/ggml-rpc.h at the LLAMA_CPP_VERSION tag). Bump these
+// whenever LLAMA_CPP_VERSION changes the RPC protocol: peers advertise
+// them, and a stale value pairs incompatible builds that then fail the
+// RPC handshake at model load. 7.0.0 since b11081 ("rpc : hash-cache only
+// weights").
 const (
-	RPCProtoMajor = 6
+	RPCProtoMajor = 7
 	RPCProtoMinor = 0
 )
 
