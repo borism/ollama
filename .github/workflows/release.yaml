@@ -328,8 +328,7 @@ jobs:
             gh release create "$GITHUB_REF_NAME" \
               --title "$RELEASE_VERSION" \
               --draft \
-              --generate-notes \
-              --prerelease
+              --generate-notes
           fi
 
           shopt -s nullglob

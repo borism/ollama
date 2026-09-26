@@ -61,8 +61,8 @@ and on macOS it installs the CLI tarball instead of `Ollama.app`.
 Everything else -- detecting NVIDIA/AMD/Jetson hardware, fetching the
 matching extra, setting up NVIDIA drivers and the systemd service -- is
 upstream's, unchanged. `releases/latest` never resolves to a
-pre-release, so publish a release with "Set as a pre-release" unticked
-for the plain `curl | sh` to find it.
+pre-release, so the release job creates a normal (non-pre-release)
+draft for the plain `curl | sh` to find once published.
 
 ## Cutting a release
 
@@ -72,22 +72,24 @@ git push origin vX.Y.Z
 ```
 
 The `release` job (gated to actual tag pushes, see below) publishes a
-**draft, prerelease** GitHub Release -- review and publish it manually
-once the artifacts look right.
+**draft** GitHub Release -- review and publish it manually once the
+artifacts look right. Tag as `v<upstream version>-cluster.N` (e.g.
+`v0.34.4-cluster.1`): the tag becomes `ollama --version`, and the
+ollama.com registry refuses pulls from clients reporting a version older
+than the models need (HTTP 412), so a fresh `v0.0.1` can't pull current
+models.
 
 ## Testing the workflow without cutting a real release
 
 Two real constraints hit while building this, worth knowing before you
 try:
 
-- **`workflow_dispatch` only works once the triggering workflow file
-  exists on the repo's default branch (`main`).** A feature branch
-  alone isn't enough, even with `--ref`. Until `ollama-cluster` merges
-  to `main`, the only way to actually run this workflow is a real tag
-  push -- `release`'s own tag-only guard (`if:
-  startsWith(github.ref, 'refs/tags/')`) exists because
-  `workflow_dispatch`'s `GITHUB_REF_NAME` is a branch name, not a
-  version, so the publish step would misbehave if it ran there anyway.
+- **`workflow_dispatch` only sees workflow files on the default branch
+  (`main`).** Run it with `gh workflow run release.yaml --ref <branch>
+  -f version=0.0.0-test` to build without publishing: `release`'s own
+  tag-only guard (`if: startsWith(github.ref, 'refs/tags/')`) skips the
+  publish step, because there `GITHUB_REF_NAME` is a branch name, not a
+  version.
 - **GitHub disables all Actions workflows on a fresh fork by default**,
   separately from the repo's Actions permissions settings (which can
   say "enabled" while this is still blocking) -- both `gh api
@@ -115,11 +117,8 @@ so a partial failure leaves nothing to clean up beyond the tag itself.
   step that invokes `cmake --target ollama-local` (or `ollama-go`)
   directly needs `-DOLLAMA_VERSION="$VERSION"` passed explicitly, the
   same way `build_darwin.sh` already does it internally.
-- `ggml_add_cpu_backend_variant(armv9.2_2 ... SME)` (llama.cpp's own
-  `ggml/src/CMakeLists.txt`) registers an SME CPU-dispatch variant with
-  no compiler-capability check, unlike the PowerPC path in the same
-  file. `ubuntu-24.04-arm`'s gcc doesn't accept `+sme`, failing the
-  whole arm64 build. Worked around here with
-  `-DGGML_CPU_ALL_VARIANTS=OFF` on arm64 only (single baseline variant,
-  no runtime CPU dispatch) -- an upstream llama.cpp gap, not something
-  to patch in this fork's build script.
+- The pre-Dockerfile arm64 build needed `-DGGML_CPU_ALL_VARIANTS=OFF`
+  because `ubuntu-24.04-arm`'s host gcc rejects the `armv9.2_2` (SME)
+  CPU variant llama.cpp registers without a compiler check. The
+  Dockerfile's own toolchain accepts it, so arm64 releases now ship the
+  full set of CPU variants like upstream.
