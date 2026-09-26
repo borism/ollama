@@ -1361,7 +1361,7 @@ func printClusterConfig(cfg *api.ClusterConfig) {
 		"share":     onOff(cfg.Share),
 		"seeds":     cmp.Or(cfg.Seeds, "-"),
 		"placement": cfg.Placement,
-		"cache_gb":  strconv.FormatUint(uint64(cfg.CacheGB), 10),
+		"cache_gb":  fmt.Sprintf("%d (%s used)", cfg.CacheGB, format.HumanBytes2(cfg.CacheUsedBytes)),
 	}
 	var data [][]string
 	for _, k := range clusterSettingKeys {

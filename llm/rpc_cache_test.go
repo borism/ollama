@@ -87,3 +87,21 @@ func TestTidyRPCCacheFreesDiskSpace(t *testing.T) {
 		t.Error("cache file kept on a full disk")
 	}
 }
+
+func TestRPCCacheBytes(t *testing.T) {
+	models := t.TempDir()
+	if got := RPCCacheBytes(models); got != 0 {
+		t.Errorf("no cache dir: %d bytes, want 0", got)
+	}
+	dir := filepath.Join(models, "rpc")
+	if err := os.Mkdir(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now()
+	writeCacheFile(t, dir, []byte("one"), []byte("12345"), now)
+	writeCacheFile(t, dir, []byte("two"), []byte("123"), now)
+	os.WriteFile(filepath.Join(dir, rpcCacheCheckedMarker), []byte("not a tensor"), 0o644)
+	if got := RPCCacheBytes(models); got != 8 {
+		t.Errorf("RPCCacheBytes = %d, want 8 (tensors only, not the marker)", got)
+	}
+}

@@ -108,6 +108,22 @@ func tidyRPCCache(dir string, maxBytes uint64, now time.Time, diskFree func(stri
 	return free() >= rpcCacheMinFree
 }
 
+// RPCCacheBytes is how much the RPC worker's tensor cache holds, given the
+// models directory it lives under (StartRPCWorker's cacheDir).
+func RPCCacheBytes(modelsDir string) uint64 {
+	entries, _ := os.ReadDir(filepath.Join(modelsDir, "rpc"))
+	var total uint64
+	for _, e := range entries {
+		if !e.Type().IsRegular() || !rpcCacheFileName.MatchString(e.Name()) {
+			continue
+		}
+		if info, err := e.Info(); err == nil {
+			total += uint64(info.Size())
+		}
+	}
+	return total
+}
+
 // rpcCacheFileIntact reports whether the file's FNV-1a hash is its name,
 // the way ggml-rpc.cpp names it ("%016" PRIx64).
 func rpcCacheFileIntact(path, name string) bool {
