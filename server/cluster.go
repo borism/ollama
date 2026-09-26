@@ -25,7 +25,7 @@ import (
 // server runs (`ollama cluster on/off/set`, POST /api/cluster/config)
 // instead of only at startup.
 type clusterRunner struct {
-	ctx   context.Context
+	ctx   context.Context //nolint:containedctx
 	sched *Scheduler
 	// start is startCluster; a field so tests can count starts and stops
 	// without binding real ports.
