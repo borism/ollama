@@ -3572,6 +3572,22 @@ func TestVRAMByGPU(t *testing.T) {
 	}
 }
 
+// TestRPCVRAMParsesAddressSuffixedBuffers: llama.cpp b11081+ logs RPC
+// buffers as "RPC0[host:port]"; they must still land under "RPC0", which
+// is what server/sched.go's clusterUsageFromRPC looks up.
+func TestRPCVRAMParsesAddressSuffixedBuffers(t *testing.T) {
+	runner := &llamaServerRunner{vramByDevice: make(map[string]uint64)}
+	w := &memoryParsingWriter{inner: io.Discard, runner: runner}
+	w.Write([]byte("load_tensors: RPC0[192.0.2.10:50052] model buffer size =   108.00 MiB\n"))
+	w.Write([]byte("llama_kv_cache: RPC0[192.0.2.10:50052] KV buffer size =    48.00 MiB\n"))
+
+	got := runner.RPCVRAM()
+	want := map[string]uint64{"RPC0": 156 * 1024 * 1024}
+	if !maps.Equal(got, want) {
+		t.Errorf("RPCVRAM() = %v, want %v", got, want)
+	}
+}
+
 func TestRPCVRAM(t *testing.T) {
 	runner := &llamaServerRunner{
 		vramByDevice: map[string]uint64{

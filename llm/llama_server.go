@@ -2924,7 +2924,10 @@ func (w *memoryParsingWriter) Write(b []byte) (int, error) {
 				}
 			}
 			for _, match := range bufferSizeRegex.FindAllSubmatch(b, -1) {
-				backendName := string(match[2])
+				// llama.cpp b11081+ suffixes RPC buffers with the server
+				// address ("RPC0[192.0.2.10:50052]"); key them by device name
+				// like every other backend (see RPCVRAM).
+				backendName, _, _ := strings.Cut(string(match[2]), "[")
 				if mib, err := strconv.ParseFloat(string(match[4]), 64); err == nil {
 					if w.buffers == nil {
 						w.buffers = make(map[memoryBufferKey]memoryBuffer)
