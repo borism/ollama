@@ -679,8 +679,15 @@ if(OLLAMA_HAVE_LLAMA_SERVER)
             -DBUILD_SHARED_LIBS=OFF
             -DGGML_BACKEND_DL=OFF
             -DGGML_METAL=ON
-            -DGGML_METAL_EMBED_LIBRARY=ON)
+            -DGGML_METAL_EMBED_LIBRARY=ON
+            # RDMA over Thunderbolt for cluster RPC (llama.cpp's
+            # ggml/src/ggml-rpc/transport-apple.cpp). librdma is weak-linked
+            # and only on macOS 26.2+, and its SDK stub is arm64e-only, so
+            # the x86_64 build below keeps RDMA off. Negotiated per
+            # connection; anything without it stays on TCP.
+            -DGGML_RPC_RDMA=ON)
     else()
+        list(APPEND _cpu_args -DGGML_RPC_RDMA=OFF)
         list(APPEND _cpu_args
             -DBUILD_SHARED_LIBS=ON
             -DGGML_BACKEND_DL=ON
@@ -696,7 +703,7 @@ if(OLLAMA_HAVE_LLAMA_SERVER)
     # the same, but this build doesn't use presets): the ggml-rpc backend
     # for --rpc, and ggml-rpc-server for OLLAMA_CLUSTER_SHARE. Both are
     # installed by llama/server/CMakeLists.txt's base-dir glob.
-    list(APPEND _cpu_args -DGGML_RPC=ON -DGGML_RPC_RDMA=OFF)
+    list(APPEND _cpu_args -DGGML_RPC=ON)
 
     ollama_add_llama_server_build(local
         RUNNER_DIR ""

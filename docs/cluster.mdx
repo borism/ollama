@@ -107,6 +107,19 @@ network hop for that little. That slice goes to CPU too.
 A non-zero `CPU` share in `ollama ps` (see above) while cluster mode is on
 is the direct, visible confirmation this happened — not a bug.
 
+## RDMA over Thunderbolt (macOS)
+
+Peers talk over TCP by default. Two Apple silicon Macs connected directly by a
+Thunderbolt 5 cable can use RDMA over Thunderbolt instead, which cuts per-token
+latency between them. It needs macOS 26.2 or later on both, enabled once per
+Mac from macOS Recovery (Terminal, `rdma_ctl enable`, reboot; see Apple's
+[TN3205](https://developer.apple.com/documentation/technotes/tn3205-low-latency-communication-with-rdma-over-thunderbolt)).
+
+Nothing to configure in Ollama: each connection negotiates RDMA when both ends
+support it over the link they're using, and silently stays on TCP otherwise,
+so RDMA and non-RDMA machines mix freely in one cluster. Set
+`GGML_RPC_NO_RDMA=1` to force TCP. Intel Macs and Linux builds use TCP only.
+
 ## Environment variables
 
 | Variable | Default | Purpose |

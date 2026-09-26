@@ -103,6 +103,8 @@ jobs:
           cp -a dist/darwin/lib/ollama/. pkg/lib/ollama/
           # Cluster RPC worker (arm64's RPC backend is linked into llama-server)
           test -x pkg/lib/ollama/ggml-rpc-server
+          # RDMA over Thunderbolt (arm64 only, see cmake/local.cmake)
+          otool -arch arm64 -L pkg/lib/ollama/ggml-rpc-server | grep -q 'librdma.*weak'
           tar czf dist/ollama-darwin.tgz -C pkg bin lib
       - name: Log build results
         run: |
