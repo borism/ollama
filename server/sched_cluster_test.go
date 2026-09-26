@@ -50,8 +50,10 @@ func TestClusterUsageFromRPC(t *testing.T) {
 }
 
 // TestLoadedModelsClusterPeers is an end-to-end check that loadedModels()
-// actually wires clusterUsageFromRPC to a runner's Options.RPCServers and
+// actually wires clusterUsageFromRPC to the runner's own --rpc list and
 // llm.LlamaServer.RPCVRAM, not just that the pure function above is correct.
+// The request options carry no RPCServers, as with automatic spillover:
+// cluster.SelectRPCServers only fills in the launch options.
 func TestLoadedModelsClusterPeers(t *testing.T) {
 	s := InitScheduler(t.Context())
 
@@ -59,11 +61,12 @@ func TestLoadedModelsClusterPeers(t *testing.T) {
 		model:     &Model{Name: "spilled", ModelPath: "/fake/spilled/model"},
 		modelPath: "/fake/spilled/model",
 		llama: &mockLlm{
-			totalSize: 10 * format.GigaByte,
-			vramSize:  10 * format.GigaByte,
-			rpcVRAM:   map[string]uint64{"RPC0": 6 * format.GigaByte},
+			totalSize:  10 * format.GigaByte,
+			vramSize:   10 * format.GigaByte,
+			rpcVRAM:    map[string]uint64{"RPC0": 6 * format.GigaByte},
+			rpcServers: "10.0.0.5:50052",
 		},
-		Options:         &api.Options{Runner: api.Runner{RPCServers: "10.0.0.5:50052"}},
+		Options:         &api.Options{},
 		sessionDuration: 10 * time.Millisecond,
 		expiresAt:       time.Now().Add(time.Minute),
 	}

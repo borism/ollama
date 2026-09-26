@@ -70,6 +70,7 @@ type LlamaServer interface {
 	MemorySize() (total, vram uint64)
 	VRAMByGPU(id ml.DeviceID) uint64
 	RPCVRAM() map[string]uint64
+	RPCServers() string
 	Pid() int
 	GetPort() int
 	GetDeviceInfos(ctx context.Context) []ml.DeviceInfo

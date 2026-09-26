@@ -549,6 +549,11 @@ func (c *Client) RPCVRAM() map[string]uint64 {
 	return nil
 }
 
+// RPCServers implements llm.LlamaServer; see RPCVRAM.
+func (c *Client) RPCServers() string {
+	return ""
+}
+
 var _ llm.LlamaServer = (*Client)(nil)
 
 // setEnv sets or replaces an environment variable in cmd.Env.

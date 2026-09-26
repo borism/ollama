@@ -1840,9 +1840,7 @@ func (s *Scheduler) loadedModels() []loadedModel {
 			total, vram := r.llama.MemorySize()
 			lm.size = int64(total)
 			lm.sizeVRAM = int64(vram)
-			if r.Options != nil {
-				lm.clusterPeers = clusterUsageFromRPC(r.Options.RPCServers, r.llama.RPCVRAM())
-			}
+			lm.clusterPeers = clusterUsageFromRPC(r.llama.RPCServers(), r.llama.RPCVRAM())
 		}
 		// The scheduler waits to set expiresAt, so a model that is still
 		// loading may have the zero value. Estimate expiration from the

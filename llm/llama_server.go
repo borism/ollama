@@ -2996,13 +2996,20 @@ func (s *llamaServerRunner) VRAMByGPU(id ml.DeviceID) uint64 {
 	return 0
 }
 
+// RPCServers returns the "host:port,..." list this runner was launched with
+// on --rpc, including peers cluster.SelectRPCServers picked automatically
+// (those never reach the request's own options).
+func (s *llamaServerRunner) RPCServers() string {
+	return s.options.RPCServers
+}
+
 // RPCVRAM returns per-device VRAM usage for llama.cpp RPC devices only
 // (ggml-org/llama.cpp tools/rpc), keyed by the device name llama-server's
 // logs use ("RPC0", "RPC1", ... in the order --rpc listed them). Unlike
 // VRAMByGPU, these aren't in s.gpus (that's this runner's *local* discovered
 // devices) -- an RPC peer has no local ml.DeviceID -- so callers pair this
-// with the same api.Options.RPCServers list that produced --rpc, by index
-// (see server/sched.go's clusterUsageFromRPC).
+// with RPCServers, the list that produced --rpc, by index (see
+// server/sched.go's clusterUsageFromRPC).
 func (s *llamaServerRunner) RPCVRAM() map[string]uint64 {
 	s.memoryMu.RLock()
 	defer s.memoryMu.RUnlock()
