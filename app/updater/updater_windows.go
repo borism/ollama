@@ -362,8 +362,11 @@ func cryptMsgClose(msg windows.Handle) error {
 	return nil
 }
 
+// IsUpdatePending reports whether a downloaded update is waiting to be
+// applied. Always false when updates are off: a stock Ollama install
+// shares this app's stage directory and may have left its own update there.
 func IsUpdatePending() bool {
-	return getStagedUpdate() != ""
+	return Enabled() && getStagedUpdate() != ""
 }
 
 func DoUpgradeAtStartup() error {
