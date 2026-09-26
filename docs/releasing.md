@@ -19,15 +19,21 @@ How `.github/workflows/release.yaml` and `scripts/install.sh` work for
   (amd64 CUDA 12, 11 GPU architectures) took 2h42m of the 6h job limit
   on the first run. Upgrade path: `cache-from`/`cache-to` against a GHCR
   registry ref, same shape as upstream's Docker Hub cache.
-- **macOS**: universal (amd64+arm64) binary, **unsigned**. Built via
-  `scripts/build_darwin.sh build package` -- deliberately skips `sign`
-  (needs an Apple Developer ID + notarization secrets this fork doesn't
-  have) and `app` (the signed menu-bar .app; needs npm, and Gatekeeper
-  would refuse it unsigned anyway regardless). Runs on a **self-hosted**
-  ephemeral Tart VM on personal hardware, not GitHub's paid
-  `macos-26-xlarge` runner -- see `docs/mac-ci-runner-setup.md` for the
-  one-time setup and the security scoping this requires (this repo is
-  public).
+- **macOS**: universal (amd64+arm64), **not signed with a Developer ID**
+  (needs a paid Apple Developer Program certificate and notarization
+  secrets this fork doesn't have). Built via `scripts/build_darwin.sh
+  build package`, which skips `sign`, then `scripts/build_darwin.sh app`
+  for `Ollama.app`, which `build_darwin.sh` signs ad hoc (`codesign -s -`)
+  when there's no `APPLE_IDENTITY`. Runs on a **self-hosted** ephemeral
+  Tart VM on personal hardware, not GitHub's paid `macos-26-xlarge`
+  runner -- see `docs/mac-ci-runner-setup.md` for the one-time setup and
+  the security scoping this requires (this repo is public). The app needs
+  Node.js and `tsc`, which the golden image has.
+- **The desktop app doesn't update itself.** `app/updater` checks
+  `ollama.com/api/update` upstream, which would replace this fork's app
+  with stock Ollama, so `UpdateCheckURLBase` is empty here and updates
+  are off. To update, install the next release's `Ollama-darwin.zip`.
+  Upgrade path: sign with a Developer ID, then host an update feed.
 - **No Windows.** Upstream's `windows-depends`/`windows-build`/
   `windows-app` jobs (384 lines) needed a Windows Authenticode cert and
   Google KMS signing credentials; dropped rather than left broken.
@@ -51,13 +57,22 @@ Linux):
   `ollama-linux-arm64-jetpack6.tar.zst` -- extras, extracted over the
   main tarball
 - `ollama-darwin.tgz` (universal)
+- `Ollama-darwin.zip` -- the macOS desktop app (universal), ad-hoc signed.
+  Unzip it, move `Ollama.app` to Applications and open it. macOS won't
+  open a downloaded app it can't verify: the first time, go to System
+  Settings > Privacy & Security, scroll to the message about "Ollama" and
+  click **Open Anyway**. Or clear the download flag in a terminal:
+  `xattr -dr com.apple.quarantine /Applications/Ollama.app`. On first
+  use macOS also asks whether Ollama may find devices on your local
+  network; cluster mode needs that allowed.
 
 `scripts/install.sh` is upstream's script with only three changes
 (documented at its top): it downloads from
 `https://github.com/borism/ollama-cluster/releases/...` instead of
 `ollama.com`, `OLLAMA_VERSION` picks a release tag
 (`releases/download/vX.Y.Z/...`, otherwise `releases/latest/download/...`),
-and on macOS it installs the CLI tarball instead of `Ollama.app`.
+and on macOS it installs the CLI tarball, not `Ollama.app` (download
+`Ollama-darwin.zip` for that).
 Everything else -- detecting NVIDIA/AMD/Jetson hardware, fetching the
 matching extra, setting up NVIDIA drivers and the systemd service -- is
 upstream's, unchanged. `releases/latest` never resolves to a

@@ -261,6 +261,13 @@ _build_macapp() {
             codesign -f --timestamp -s "$APPLE_IDENTITY" --identifier ai.ollama.ollama --options=runtime "$lib"
         done
         codesign -f --timestamp -s "$APPLE_IDENTITY" --identifier com.electron.ollama --deep --options=runtime dist/Ollama.app
+    else
+        # No Developer ID (this fork's releases): sign ad hoc so the bundle
+        # and the nested mock Squirrel.framework are at least consistent.
+        # A downloaded copy still has to be approved once in System Settings
+        # (docs/releasing.md); --deep is needed because the framework is
+        # unsigned otherwise.
+        codesign --force --deep -s - dist/Ollama.app
     fi
 
     rm -f dist/Ollama-darwin.zip
