@@ -18,6 +18,37 @@ function deferred() {
 }
 
 describe("Settings defaults", () => {
+  it("resets cluster mode back to off", async () => {
+    const updateCluster = vi.fn().mockResolvedValue(undefined);
+    await applySettingsDefaults({
+      updateSettings: vi.fn().mockResolvedValue(undefined),
+      updateCloud: vi.fn().mockResolvedValue(undefined),
+      updateShowAppsInMenu: vi.fn().mockResolvedValue(undefined),
+      resetChatGPTModels: vi.fn().mockResolvedValue(true),
+      resetClaudeMappings: vi.fn().mockResolvedValue(true),
+      currentSettings: currentSettings(),
+      currentShowAppsInMenu: true,
+      cloudSource: "none",
+      onSaved: vi.fn(),
+      updateCluster,
+      currentClusterSettings: {
+        enabled: true,
+        share: false,
+        seeds: "",
+        placement: "greedy",
+        cache_gb: 64,
+      },
+    });
+
+    expect(updateCluster).toHaveBeenCalledWith({
+      enabled: false,
+      share: true,
+      seeds: "",
+      placement: "waterfill",
+      cache_gb: 32,
+    });
+  });
+
   it("serializes a full reset before showing Saved", async () => {
     const settingsUpdate = deferred();
     const updateSettings = vi.fn(() => settingsUpdate.promise);

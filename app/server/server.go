@@ -39,6 +39,8 @@ type InferenceCompute struct {
 	Driver  string
 	Name    string
 	VRAM    string
+
+	Description string // "Apple M2 Max"; see ClusterGPU
 }
 
 type InferenceInfo struct {
@@ -333,6 +335,10 @@ func GetInferenceInfo(ctx context.Context) (*InferenceInfo, error) {
 			q:  regexp.MustCompile(fmt.Sprintf(q, "name")),
 			nq: regexp.MustCompile(fmt.Sprintf(nq, "name")),
 		},
+		"description": {
+			q:  regexp.MustCompile(fmt.Sprintf(q, "description")),
+			nq: regexp.MustCompile(fmt.Sprintf(nq, "description")),
+		},
 		"total": {
 			q:  regexp.MustCompile(fmt.Sprintf(q, "total")),
 			nq: regexp.MustCompile(fmt.Sprintf(nq, "total")),
@@ -380,6 +386,8 @@ func GetInferenceInfo(ctx context.Context) (*InferenceInfo, error) {
 					Driver:  get("driver", line),
 					Name:    get("name", line),
 					VRAM:    get("total", line),
+
+					Description: get("description", line),
 				}
 
 				slog.Info("Matched", "inference compute", ic)

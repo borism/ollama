@@ -1,5 +1,6 @@
 #import "app_darwin.h"
 #import "menu.h"
+#import "cluster_menu_darwin.h"
 #import "../../updater/updater_darwin.h"
 #import <AppKit/AppKit.h>
 #import <Cocoa/Cocoa.h>
@@ -516,6 +517,7 @@ static NSImage *ollamaApplicationIcon(void) {
     [menu addItemWithTitle:@"Settings"
                     action:@selector(settingsUI)
              keyEquivalent:@","];
+    [self addClusterMenuItemsTo:menu];
     [menu addItem:[NSMenuItem separatorItem]];
 
     self.updateAvailableMenuItem =
@@ -690,6 +692,7 @@ static NSImage *ollamaApplicationIcon(void) {
     }
     [self refreshClaudeAppState];
     [self refreshCodexAppState];
+    [self refreshClusterMenuState];
 }
 
 - (void)refreshClaudeAppState {

@@ -622,3 +622,135 @@ export async function getCloudStatus(): Promise<CloudStatusResponse | null> {
     source: (data.source as CloudStatusSource) || "none",
   };
 }
+
+// Cluster mode (see docs/cluster.mdx). Types are handwritten rather than
+// generated into @/gotypes, to keep this fork's changes out of the
+// generated file (api.ClusterConfig in api/types.go, app/ui/cluster.go).
+export interface ClusterSettingsData {
+  enabled: boolean;
+  share: boolean;
+  seeds: string;
+  placement: ClusterPlacement;
+  // Cap in GB on the tensor cache a sharing computer keeps; 0 turns it off
+  // (OLLAMA_CLUSTER_CACHE_GB, llm/rpc_cache.go).
+  cache_gb: number;
+  // Read-only: what the tensor cache holds now, in bytes; ignored on save.
+  cache_used_bytes?: number;
+  // Read-only: this computer's GPU name ("Apple M2 Max GPU"), "" when
+  // unknown; ignored on save (server.ClusterGPUName).
+  gpu?: string;
+  // Read-only: where each setting comes from, keyed by field name: "env"
+  // (an OLLAMA_CLUSTER* variable, which the app can't override), "config"
+  // (server.json) or "default". See api.ClusterConfig.
+  sources?: Partial<Record<keyof ClusterSettingsData, string>>;
+}
+
+// Mirrors OLLAMA_CLUSTER_PLACEMENT (cluster.SelectRPCServers).
+export type ClusterPlacement = "waterfill" | "greedy";
+
+export async function getClusterSettings(): Promise<ClusterSettingsData> {
+  const response = await fetch(`${API_BASE}/api/v1/cluster`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch cluster settings: ${response.status}`);
+  }
+  const data = await response.json();
+  return {
+    enabled: Boolean(data.enabled),
+    share: Boolean(data.share),
+    seeds: typeof data.seeds === "string" ? data.seeds : "",
+    placement: data.placement === "greedy" ? "greedy" : "waterfill",
+    cache_gb: typeof data.cache_gb === "number" ? data.cache_gb : 32,
+    cache_used_bytes:
+      typeof data.cache_used_bytes === "number" ? data.cache_used_bytes : 0,
+    gpu: typeof data.gpu === "string" ? data.gpu : "",
+    sources:
+      data.sources && typeof data.sources === "object" ? data.sources : {},
+  };
+}
+
+export async function updateClusterSettings(
+  settings: ClusterSettingsData,
+): Promise<ClusterSettingsData> {
+  const response = await fetch(`${API_BASE}/api/v1/cluster`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(settings),
+  });
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error || "Failed to update cluster settings");
+  }
+  const data = await response.json();
+  return {
+    enabled: Boolean(data.enabled),
+    share: Boolean(data.share),
+    seeds: typeof data.seeds === "string" ? data.seeds : "",
+    placement: data.placement === "greedy" ? "greedy" : "waterfill",
+    cache_gb: typeof data.cache_gb === "number" ? data.cache_gb : 32,
+    cache_used_bytes:
+      typeof data.cache_used_bytes === "number" ? data.cache_used_bytes : 0,
+    gpu: typeof data.gpu === "string" ? data.gpu : "",
+    sources:
+      data.sources && typeof data.sources === "object" ? data.sources : {},
+  };
+}
+
+// Mirrors api.ClusterDevice (api/types.go).
+export interface ClusterPeerDevice {
+  name: string;
+  total_memory: number;
+  free_memory: number;
+}
+
+// Mirrors api.ClusterPeer (api/types.go).
+export interface ClusterPeer {
+  id: string;
+  addr: string;
+  sharing: boolean;
+  devices: ClusterPeerDevice[];
+  load: number;
+  latency_ms?: number;
+  last_seen: string;
+}
+
+// Mirrors api.ClusterListResponse (api/types.go), from GET /api/cluster/peers.
+export interface ClusterListResponse {
+  enabled: boolean;
+  peers: ClusterPeer[];
+}
+
+export async function getClusterPeers(): Promise<ClusterListResponse> {
+  const response = await fetch(`${API_BASE}/api/cluster/peers`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch cluster peers: ${response.status}`);
+  }
+  const data = await response.json();
+  return {
+    enabled: Boolean(data.enabled),
+    peers: Array.isArray(data.peers) ? data.peers : [],
+  };
+}
+
+// Mirrors api.ProcessClusterPeer (api/types.go).
+export interface ProcessClusterPeer {
+  addr: string;
+  size: number;
+}
+
+// The subset of api.ProcessModelResponse (api/types.go) the Cluster settings
+// panel needs to show which loaded models spilled onto which peers.
+export interface ProcessModel {
+  name: string;
+  cluster_peers?: ProcessClusterPeer[];
+}
+
+export async function getClusterModelSpillover(): Promise<ProcessModel[]> {
+  const response = await fetch(`${API_BASE}/api/ps`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch running models: ${response.status}`);
+  }
+  const data = await response.json();
+  return Array.isArray(data.models) ? data.models : [];
+}

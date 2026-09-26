@@ -6,6 +6,7 @@ import { Field, Label, Description } from "@/components/ui/fieldset";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import ClusterSettings from "@/components/ClusterSettings";
 import {
   ClaudeDesktopModelsSettings,
   type ClaudeDesktopModelsSettingsHandle,
@@ -40,6 +41,9 @@ import {
   updateCloudSetting,
   updateSettings,
   getInferenceCompute,
+  getClusterSettings,
+  updateClusterSettings,
+  type ClusterSettingsData,
 } from "@/api";
 
 function AnimatedDots() {
@@ -66,6 +70,12 @@ interface SettingsDefaultsActions {
   currentShowAppsInMenu: boolean;
   cloudSource: CloudStatusSource;
   onSaved: () => void;
+  // Cluster settings live outside the versioned settings table (see
+  // app/store/cluster.go), so resetting them is a separate optional action.
+  // Optional so existing callers/tests that don't know about cluster mode
+  // are unaffected.
+  updateCluster?: (settings: ClusterSettingsData) => Promise<unknown>;
+  currentClusterSettings?: ClusterSettingsData;
 }
 
 interface CloudUpdateRequest {
@@ -86,14 +96,35 @@ export async function applySettingsDefaults({
   currentShowAppsInMenu,
   cloudSource,
   onSaved,
+  updateCluster,
+  currentClusterSettings,
 }: SettingsDefaultsActions): Promise<void> {
   const cloudNeedsReset = cloudSource === "config" || cloudSource === "both";
+  const clusterNeedsReset =
+    updateCluster &&
+    currentClusterSettings &&
+    (currentClusterSettings.enabled ||
+      !currentClusterSettings.share ||
+      currentClusterSettings.seeds !== "" ||
+      currentClusterSettings.placement !== "waterfill" ||
+      currentClusterSettings.cache_gb !== 32);
   const rollbacks: Array<() => Promise<unknown>> = [];
 
   try {
     if (cloudNeedsReset) {
       await updateCloud(true);
       rollbacks.push(() => updateCloud(false));
+    }
+
+    if (clusterNeedsReset && updateCluster && currentClusterSettings) {
+      await updateCluster({
+        enabled: false,
+        share: true,
+        seeds: "",
+        placement: "waterfill",
+        cache_gb: 32, // OLLAMA_CLUSTER_CACHE_GB's default
+      });
+      rollbacks.push(() => updateCluster(currentClusterSettings));
     }
 
     await updateSettings(
@@ -211,6 +242,11 @@ export default function Settings() {
   const { data: inferenceComputeResponse } = useQuery({
     queryKey: ["inferenceCompute"],
     queryFn: getInferenceCompute,
+  });
+
+  const { data: clusterSettings } = useQuery({
+    queryKey: ["clusterSettings"],
+    queryFn: getClusterSettings,
   });
 
   const defaultContextLength = inferenceComputeResponse?.defaultContextLength;
@@ -414,6 +450,12 @@ export default function Settings() {
         currentShowAppsInMenu: showAppsInMenu,
         cloudSource,
         onSaved: showSavedConfirmation,
+        updateCluster: async (defaultClusterSettings) => {
+          const saved = await updateClusterSettings(defaultClusterSettings);
+          queryClient.setQueryData(["clusterSettings"], saved);
+          return saved;
+        },
+        currentClusterSettings: clusterSettings,
       });
     } catch (error) {
       console.error("Failed to reset settings:", error);
@@ -697,6 +739,9 @@ export default function Settings() {
                   </div>
                 </div>
               </Field>
+
+              {/* Cluster mode */}
+              <ClusterSettings />
 
               {/* Model Directory */}
               <Field>

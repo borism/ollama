@@ -69,6 +69,45 @@ Once two or more instances have cluster mode on, a request
 for a model that doesn't fit locally will automatically pick a peer with
 free GPU memory and pass it to `llama-server` as an RPC worker.
 
+## Desktop app
+
+The desktop app (macOS and Windows) has a Cluster mode section in Settings,
+right below "Expose Ollama to the network". It changes the same settings as
+`ollama cluster on/off/set` (see [Enabling it](#enabling-it)): the app's
+`ollama serve` saves them in `~/.ollama/server.json` and applies them
+without a restart, so the app, the menu and the command line always agree.
+The switches map onto:
+
+- **Cluster mode** -- `OLLAMA_CLUSTER`.
+- **Share the \<GPU name\> GPU**, e.g. "Share the Apple M2 Max GPU" --
+  `OLLAMA_CLUSTER_SHARE` (disabled while cluster mode is off). It reads
+  "Share this computer's GPU" on a machine without one, or before the
+  server has started.
+- **Placement** -- `OLLAMA_CLUSTER_PLACEMENT`, Waterfill (the default) or
+  Greedy (disabled while cluster mode is off).
+- **Tensor cache** -- `OLLAMA_CLUSTER_CACHE_GB`, the cache's size cap in GB;
+  0 turns it off (disabled while cluster mode or sharing is off).
+- **Peers on other subnets** -- `OLLAMA_CLUSTER_SEEDS`, a comma-separated
+  `host:port` list; rejected with an inline error if it doesn't parse as
+  that.
+
+On macOS, the menu-bar menu has **Cluster Mode** and **Share the \<GPU
+name\> GPU** items, each with a green (on) or red (off) dot; click one
+to switch it. A **Placement** submenu below them picks the placement
+policy. macOS asks once
+whether Ollama may find devices on local networks; discovery needs that
+allowed (System Settings > Privacy & Security > Local Network).
+
+The panel also polls this instance's `ollama cluster ls` equivalent every
+few seconds while cluster mode is on, showing peers and any model spillover
+onto them the same way `ollama ps` does, and always shows the
+trusted-network warning above.
+
+An `OLLAMA_CLUSTER*` variable in the server's environment (launchd, a
+service environment) still wins. The app then shows that setting locked,
+with a note naming the variable, and the menu item is greyed out with the
+same explanation in its tooltip.
+
 ## Listing peers
 
 ```shell

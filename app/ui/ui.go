@@ -296,6 +296,8 @@ func (s *Server) Handler() http.Handler {
 	mux.Handle("POST /api/v1/settings", handle(s.settings))
 	mux.Handle("GET /api/v1/cloud", handle(s.getCloudSetting))
 	mux.Handle("POST /api/v1/cloud", handle(s.cloudSetting))
+	mux.Handle("GET /api/v1/cluster", handle(s.getClusterSettings))
+	mux.Handle("POST /api/v1/cluster", handle(s.clusterSettings))
 	mux.Handle("GET /api/v1/models/cloud", handle(s.getCloudModels))
 	mux.Handle("GET /api/v1/integrations", handle(s.getIntegrationStatuses))
 	if s.IntegrationModels != nil {
@@ -315,6 +317,8 @@ func (s *Server) Handler() http.Handler {
 	mux.Handle("POST /api/me", ollamaProxy)
 	mux.Handle("POST /api/signout", ollamaProxy)
 	mux.Handle("GET /api/experimental/model-recommendations", ollamaProxy)
+	mux.Handle("GET /api/cluster/peers", ollamaProxy)
+	mux.Handle("GET /api/ps", ollamaProxy)
 
 	// React app - catch all non-API routes and serve the React app
 	mux.Handle("GET /", s.appHandler())
