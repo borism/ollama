@@ -36,6 +36,8 @@
     <string>14.0</string>
     <key>LSUIElement</key>
     <true/>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>Ollama uses the local network to find other computers running ollama-cluster and share GPU capacity with them.</string>
     <key>CFBundleURLTypes</key>
     <array>
       <dict>

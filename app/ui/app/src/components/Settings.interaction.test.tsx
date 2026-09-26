@@ -91,6 +91,11 @@ vi.mock("@tanstack/react-query", async (importOriginal) => ({
         error: null,
       };
     }
+    if (queryKey[0] === "clusterSettings") {
+      // Cluster mode off with no seeds needs no reset, so the reset-to-
+      // defaults tests below don't have to account for it.
+      return { data: { enabled: false, share: true, seeds: "" } };
+    }
     return { data: { defaultContextLength: 65_536 } };
   },
   useMutation: ({
@@ -143,6 +148,10 @@ vi.mock("@/api", () => ({
   getInferenceCompute: vi.fn(),
   updateSettings: mocks.updateSettings,
   updateCloudSetting: mocks.updateCloudSetting,
+  getClusterSettings: vi.fn(),
+  updateClusterSettings: vi.fn(),
+  getClusterPeers: vi.fn(),
+  getClusterModelSpillover: vi.fn(),
 }));
 
 function textContent(node: ReactTestInstance): string {
