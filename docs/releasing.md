@@ -71,6 +71,10 @@ git tag vX.Y.Z
 git push origin vX.Y.Z
 ```
 
+Push only the one tag, never `git push --tags`: a clone with the
+`upstream` remote carries upstream's ~670 release tags, which don't
+belong on this repo.
+
 The `release` job (gated to actual tag pushes, see below) publishes a
 **draft** GitHub Release -- review and publish it manually once the
 artifacts look right. Tag as `v<upstream version>-cluster.N` (e.g.
