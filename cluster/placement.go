@@ -2,9 +2,13 @@ package cluster
 
 import (
 	"fmt"
+	"log/slog"
 	"math"
+	"net"
+	"slices"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/borism/ollama-cluster/api"
 	"github.com/borism/ollama-cluster/envconfig"
@@ -172,7 +176,7 @@ func selectGreedy(usable []Peer, local, predicted uint64) []string {
 		if cum >= predicted {
 			break
 		}
-		addrs = append(addrs, fmt.Sprintf("%s:%d", p.Addr, p.RPCPort))
+		addrs = append(addrs, rpcAddr(p))
 		cum += peerFreeMemory(p)
 	}
 	return addrs
@@ -210,7 +214,67 @@ func selectWaterFill(usable []Peer, shortfall uint64) []string {
 
 	addrs := make([]string, len(picked))
 	for i, s := range picked {
-		addrs[i] = fmt.Sprintf("%s:%d", s.peer.Addr, s.peer.RPCPort)
+		addrs[i] = rpcAddr(s.peer)
 	}
 	return addrs
+}
+
+// rpcAddr is how a peer's ggml-rpc-server appears in --rpc.
+func rpcAddr(p Peer) string {
+	return fmt.Sprintf("%s:%d", p.Addr, p.RPCPort)
+}
+
+// SelectReachableRPCServers is SelectRPCServers, but checks that every peer
+// it picks accepts a connection on its RPC port first, and picks again
+// without the ones that don't. llama-server aborts the whole load when it
+// can't reach an --rpc server (ggml-rpc.cpp "Failed to connect"), so a peer
+// that is still beaconing but blocked (firewall, macOS Local Network
+// permission) or just gone would otherwise stop the model loading at all.
+// With no reachable peer left it returns no RPCServers, and the model loads
+// locally. RPCServers the caller set itself are passed through unchecked.
+//
+// dial is DialRPC in production; it is a parameter so tests don't need real
+// listeners. It runs while the scheduler holds its load lock, which is why
+// it's bounded by probeTimeout.
+func SelectReachableRPCServers(gpus []ml.DeviceInfo, predicted uint64, peers []Peer, opts api.Options, dial func(addr string) error) api.Options {
+	if opts.RPCServers != "" {
+		return opts
+	}
+	for {
+		picked := SelectRPCServers(gpus, predicted, peers, opts)
+		if picked.RPCServers == "" {
+			return picked
+		}
+
+		addrs := strings.Split(picked.RPCServers, ",")
+		errs := make([]error, len(addrs))
+		var wg sync.WaitGroup
+		for i, addr := range addrs {
+			wg.Go(func() { errs[i] = dial(addr) })
+		}
+		wg.Wait()
+
+		unreachable := map[string]bool{}
+		for i, err := range errs {
+			if err != nil {
+				slog.Warn("cluster: skipping unreachable peer", "addr", addrs[i], "error", err)
+				unreachable[addrs[i]] = true
+			}
+		}
+		if len(unreachable) == 0 {
+			return picked
+		}
+		// Terminates: every round removes at least one peer.
+		peers = slices.DeleteFunc(slices.Clone(peers), func(p Peer) bool { return unreachable[rpcAddr(p)] })
+	}
+}
+
+// DialRPC checks that addr accepts a TCP connection within probeTimeout,
+// the same check probeLoop times for Peer.Latency.
+func DialRPC(addr string) error {
+	conn, err := net.DialTimeout("tcp", addr, probeTimeout)
+	if err != nil {
+		return err
+	}
+	return conn.Close()
 }

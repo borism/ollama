@@ -101,6 +101,7 @@ type Server struct {
 	defaultNumCtx int
 	requestLogger *inferenceRequestLogger
 	modelCaches   *modelCaches
+	cluster       *clusterRunner
 }
 
 func init() {
@@ -1965,6 +1966,8 @@ func (s *Server) GenerateRoutes() (http.Handler, error) {
 	// Inference
 	r.GET("/api/ps", s.PsHandler)
 	r.GET("/api/cluster/peers", s.ClusterPeersHandler)
+	r.GET("/api/cluster/config", s.ClusterConfigHandler)
+	r.POST("/api/cluster/config", s.UpdateClusterConfigHandler)
 	r.POST("/api/generate", s.withInferenceRequestLogging("/api/generate", s.GenerateHandler)...)
 	r.POST("/api/chat", s.withInferenceRequestLogging("/api/chat", s.ChatHandler)...)
 	r.POST("/api/embed", s.EmbedHandler)
@@ -2069,9 +2072,8 @@ func Serve(ln net.Listener) error {
 	s.sched = sched
 	s.modelCaches.Start(ctx)
 
-	if envconfig.Cluster() {
-		startCluster(ctx, sched)
-	}
+	s.cluster = newClusterRunner(ctx, sched)
+	s.cluster.apply()
 
 	slog.Info(fmt.Sprintf("Listening on %s (version %s)", ln.Addr(), version.Version))
 	srvr := &http.Server{
@@ -2377,17 +2379,18 @@ func (s *Server) PsHandler(c *gin.Context) {
 }
 
 // ClusterPeersHandler lists this instance's known ollama-cluster peers (see
-// docs/cluster.mdx). clusterTable is nil unless OLLAMA_CLUSTER=1 (see
-// server/cluster.go's startCluster), so "cluster is off" is reported
-// distinctly from "cluster is on but no peers found yet".
+// docs/cluster.mdx). clusterTable is nil while cluster mode is off (see
+// server/cluster.go), so "cluster is off" is reported distinctly from
+// "cluster is on but no peers found yet".
 func (s *Server) ClusterPeersHandler(c *gin.Context) {
-	if s.sched.clusterTable == nil {
+	table := s.sched.clusterTable.Load()
+	if table == nil {
 		c.JSON(http.StatusOK, api.ClusterListResponse{})
 		return
 	}
 
 	peers := []api.ClusterPeer{}
-	for _, p := range s.sched.clusterTable.Peers() {
+	for _, p := range table.Peers() {
 		peers = append(peers, clusterPeerToAPI(p))
 	}
 

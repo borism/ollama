@@ -1,7 +1,9 @@
 package cluster
 
 import (
+	"errors"
 	"math"
+	"sync"
 	"testing"
 	"time"
 
@@ -241,4 +243,52 @@ func TestWaterFill(t *testing.T) {
 	if math.Abs(fracs[0]-0.2) > 1e-6 || math.Abs(fracs[1]-0.3) > 1e-6 {
 		t.Fatalf("unsatisfiable: got %v, want [0.2 0.3] (both maxed at their cap)", fracs)
 	}
+}
+
+// TestSelectReachableRPCServers: a peer that doesn't accept connections is
+// dropped and the pick is redone without it, instead of being handed to
+// llama-server (which aborts the whole load on it).
+func TestSelectReachableRPCServers(t *testing.T) {
+	down := map[string]bool{"10.0.0.2:50052": true}
+	var mu sync.Mutex
+	var dialed []string
+	dial := func(addr string) error {
+		mu.Lock()
+		defer mu.Unlock()
+		dialed = append(dialed, addr)
+		if down[addr] {
+			return errors.New("connect: no route to host")
+		}
+		return nil
+	}
+	gpus := []ml.DeviceInfo{gpu(100)}
+
+	t.Run("unreachable peer is replaced by a reachable one", func(t *testing.T) {
+		t.Setenv("OLLAMA_CLUSTER_PLACEMENT", "greedy")
+		peers := []Peer{
+			peer("10.0.0.2", 50052, RPCProtoMajor, 0, 20000), // biggest, greedy's first pick
+			peer("10.0.0.3", 50052, RPCProtoMajor, 0, 9000),
+		}
+		got := SelectReachableRPCServers(gpus, mib(4000), peers, api.Options{}, dial)
+		if got.RPCServers != "10.0.0.3:50052" {
+			t.Errorf("RPCServers = %q, want 10.0.0.3:50052", got.RPCServers)
+		}
+	})
+
+	t.Run("no reachable peer loads locally", func(t *testing.T) {
+		peers := []Peer{peer("10.0.0.2", 50052, RPCProtoMajor, 0, 20000)}
+		got := SelectReachableRPCServers(gpus, mib(4000), peers, api.Options{}, dial)
+		if got.RPCServers != "" {
+			t.Errorf("RPCServers = %q, want none", got.RPCServers)
+		}
+	})
+
+	t.Run("caller's own RPCServers are not dialed", func(t *testing.T) {
+		dialed = nil
+		opts := api.Options{Runner: api.Runner{RPCServers: "10.0.0.2:50052"}}
+		got := SelectReachableRPCServers(gpus, mib(4000), nil, opts, dial)
+		if got.RPCServers != "10.0.0.2:50052" || len(dialed) != 0 {
+			t.Errorf("RPCServers = %q, dialed %v; want passed through undialed", got.RPCServers, dialed)
+		}
+	})
 }

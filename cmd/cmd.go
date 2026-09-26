@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"bytes"
+	"cmp"
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
@@ -1290,7 +1291,7 @@ func ClusterListHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	if !resp.Enabled {
-		fmt.Println("cluster mode is off on this instance -- set OLLAMA_CLUSTER=1 and restart the server to enable it")
+		fmt.Println("cluster mode is off on this instance -- run `ollama cluster on` to turn it on")
 		return nil
 	}
 
@@ -1333,6 +1334,136 @@ func ClusterListHandler(cmd *cobra.Command, args []string) error {
 	table.AppendBulk(data)
 	table.Render()
 
+	return nil
+}
+
+// clusterSettingKeys maps api.ClusterConfig's JSON names to the names
+// `ollama cluster status/set` use and the environment variable that
+// overrides each.
+var clusterSettingKeys = []struct{ json, name, env string }{
+	{"enabled", "cluster", "OLLAMA_CLUSTER"},
+	{"share", "share", "OLLAMA_CLUSTER_SHARE"},
+	{"seeds", "seeds", "OLLAMA_CLUSTER_SEEDS"},
+	{"placement", "placement", "OLLAMA_CLUSTER_PLACEMENT"},
+	{"cache_gb", "cache-gb", "OLLAMA_CLUSTER_CACHE_GB"},
+}
+
+func onOff(b bool) string {
+	if b {
+		return "on"
+	}
+	return "off"
+}
+
+func printClusterConfig(cfg *api.ClusterConfig) {
+	values := map[string]string{
+		"enabled":   onOff(cfg.Enabled),
+		"share":     onOff(cfg.Share),
+		"seeds":     cmp.Or(cfg.Seeds, "-"),
+		"placement": cfg.Placement,
+		"cache_gb":  strconv.FormatUint(uint64(cfg.CacheGB), 10),
+	}
+	var data [][]string
+	for _, k := range clusterSettingKeys {
+		from := cfg.Sources[k.json]
+		switch from {
+		case "env":
+			from = "environment (" + k.env + ")"
+		case "config":
+			from = "server.json"
+		}
+		data = append(data, []string{k.name, values[k.json], from})
+	}
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"SETTING", "VALUE", "FROM"})
+	table.SetAutoWrapText(false)
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.SetHeaderLine(false)
+	table.SetBorder(false)
+	table.SetNoWhiteSpace(true)
+	table.SetTablePadding("    ")
+	table.AppendBulk(data)
+	table.Render()
+}
+
+func ClusterStatusHandler(cmd *cobra.Command, args []string) error {
+	client, err := api.ClientFromEnvironment()
+	if err != nil {
+		return err
+	}
+	cfg, err := client.ClusterConfig(cmd.Context())
+	if err != nil {
+		return err
+	}
+	printClusterConfig(cfg)
+	return nil
+}
+
+// updateCluster sends req, prints the result, and warns about any setting
+// it changed that an environment variable on the server overrides.
+func updateCluster(cmd *cobra.Command, req *api.ClusterConfigRequest, changed string) error {
+	client, err := api.ClientFromEnvironment()
+	if err != nil {
+		return err
+	}
+	cfg, err := client.UpdateClusterConfig(cmd.Context(), req)
+	if err != nil {
+		return err
+	}
+	printClusterConfig(cfg)
+	for _, k := range clusterSettingKeys {
+		if k.json == changed && cfg.Sources[k.json] == "env" {
+			fmt.Fprintf(os.Stderr, "\nwarning: %s is set in the server's environment, which overrides this. The new value is saved, but has no effect until %s is removed.\n", k.env, k.env)
+		}
+	}
+	return nil
+}
+
+func ClusterOnHandler(cmd *cobra.Command, args []string) error {
+	on := true
+	return updateCluster(cmd, &api.ClusterConfigRequest{Enabled: &on}, "enabled")
+}
+
+func ClusterOffHandler(cmd *cobra.Command, args []string) error {
+	off := false
+	return updateCluster(cmd, &api.ClusterConfigRequest{Enabled: &off}, "enabled")
+}
+
+func ClusterSetHandler(cmd *cobra.Command, args []string) error {
+	key, value := args[0], args[1]
+	var req api.ClusterConfigRequest
+	switch key {
+	case "share":
+		var b bool
+		switch value {
+		case "on", "true", "1":
+			b = true
+		case "off", "false", "0":
+		default:
+			return fmt.Errorf("share takes on or off, not %q", value)
+		}
+		req.Share = &b
+	case "seeds":
+		req.Seeds = &value
+	case "placement":
+		req.Placement = &value
+	case "cache-gb":
+		n, err := strconv.ParseUint(value, 10, 32)
+		if err != nil {
+			return fmt.Errorf("cache-gb takes a whole number of gigabytes (0 turns the cache off), not %q", value)
+		}
+		gb := uint(n)
+		req.CacheGB = &gb
+	default:
+		return fmt.Errorf("unknown cluster setting %q: expected share, seeds, placement or cache-gb", key)
+	}
+	for _, k := range clusterSettingKeys {
+		if k.name == key {
+			return updateCluster(cmd, &req, k.json)
+		}
+	}
 	return nil
 }
 
@@ -2649,11 +2780,50 @@ func NewCLI() *cobra.Command {
 		PreRunE: checkServerHeartbeat,
 		RunE:    ClusterListHandler,
 	}
+	clusterStatusCmd := &cobra.Command{
+		Use:     "status",
+		Short:   "Show this server's cluster settings and where each comes from",
+		Args:    cobra.NoArgs,
+		PreRunE: checkServerHeartbeat,
+		RunE:    ClusterStatusHandler,
+	}
+	clusterOnCmd := &cobra.Command{
+		Use:     "on",
+		Short:   "Turn cluster mode on, without restarting the server",
+		Long:    "Turn cluster mode on, without restarting the server.\n\nThe setting is saved in the server's ~/.ollama/server.json, so it survives\nrestarts. Only works on the machine the server runs on. Cluster mode offers\nthis machine's GPU to every computer on the LAN, unauthenticated: only turn\nit on on a trusted network.",
+		Args:    cobra.NoArgs,
+		PreRunE: checkServerHeartbeat,
+		RunE:    ClusterOnHandler,
+	}
+	clusterOffCmd := &cobra.Command{
+		Use:     "off",
+		Short:   "Turn cluster mode off, without restarting the server",
+		Args:    cobra.NoArgs,
+		PreRunE: checkServerHeartbeat,
+		RunE:    ClusterOffHandler,
+	}
+	clusterSetCmd := &cobra.Command{
+		Use:   "set SETTING VALUE",
+		Short: "Change a cluster setting, without restarting the server",
+		Long: `Change a cluster setting, without restarting the server. Settings:
+
+  share on|off           share this machine's GPU with peers (default on)
+  seeds HOST:PORT,...    peers to reach directly on other subnets ("" clears)
+  placement waterfill|greedy
+                         how peers are picked when a model doesn't fit
+  cache-gb N             cap on the cache of weights peers loaded here (0 = off)
+
+Saved in the server's ~/.ollama/server.json. An OLLAMA_CLUSTER_* variable in
+the server's environment still overrides the saved value.`,
+		Args:    cobra.ExactArgs(2),
+		PreRunE: checkServerHeartbeat,
+		RunE:    ClusterSetHandler,
+	}
 	clusterCmd := &cobra.Command{
 		Use:   "cluster",
-		Short: "Manage ollama-cluster peers",
+		Short: "Manage ollama-cluster peers and settings",
 	}
-	clusterCmd.AddCommand(clusterLsCmd)
+	clusterCmd.AddCommand(clusterLsCmd, clusterStatusCmd, clusterOnCmd, clusterOffCmd, clusterSetCmd)
 
 	deleteCmd := &cobra.Command{
 		Use:     "rm MODEL [MODEL...]",

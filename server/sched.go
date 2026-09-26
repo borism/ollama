@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/borism/ollama-cluster/api"
@@ -81,10 +82,11 @@ type Scheduler struct {
 	getSystemInfoFn func() ml.SystemInfo
 	waitForRecovery time.Duration
 
-	// clusterTable is the live set of ollama-cluster peers (nil unless
-	// OLLAMA_CLUSTER is set -- see cmd/cluster.go), consulted in load() to
+	// clusterTable is the live set of ollama-cluster peers (nil while
+	// cluster mode is off -- see server/cluster.go, which swaps it when
+	// cluster mode is switched at runtime), consulted in load() to
 	// auto-fill RPCServers when a model doesn't fit locally.
-	clusterTable *cluster.Table
+	clusterTable atomic.Pointer[cluster.Table]
 }
 
 // Default automatic value for number of models we allow per GPU
@@ -559,8 +561,8 @@ func (s *Scheduler) load(req *LlmRequest, systemInfo ml.SystemInfo, gpus []ml.De
 			predictedCtx := effectiveLlamaServerContext(req.opts.NumCtx, f, numParallel)
 			predicted := llm.PredictServerVRAM(req.model.ModelPath, f, predictedCtx)
 			reqOpts := req.opts
-			if s.clusterTable != nil && (reqOpts.RPCAuto == nil || *reqOpts.RPCAuto) {
-				reqOpts = cluster.SelectRPCServers(gpus, predicted, s.clusterTable.Peers(), reqOpts)
+			if table := s.clusterTable.Load(); table != nil && (reqOpts.RPCAuto == nil || *reqOpts.RPCAuto) {
+				reqOpts = cluster.SelectReachableRPCServers(gpus, predicted, table.Peers(), reqOpts, cluster.DialRPC)
 			}
 			loadGpus, launchOpts = selectLlamaServerPlacement(systemInfo, gpus, predicted, reqOpts)
 			availableForBatch, _, _ := availableMemoryForPlacement(systemInfo, loadGpus, launchOpts)
@@ -1840,9 +1842,7 @@ func (s *Scheduler) loadedModels() []loadedModel {
 			total, vram := r.llama.MemorySize()
 			lm.size = int64(total)
 			lm.sizeVRAM = int64(vram)
-			if r.Options != nil {
-				lm.clusterPeers = clusterUsageFromRPC(r.Options.RPCServers, r.llama.RPCVRAM())
-			}
+			lm.clusterPeers = clusterUsageFromRPC(r.llama.RPCServers(), r.llama.RPCVRAM())
 		}
 		// The scheduler waits to set expiresAt, so a model that is still
 		// loading may have the zero value. Estimate expiration from the

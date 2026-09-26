@@ -165,3 +165,41 @@ func TestResolveSeedsEmpty(t *testing.T) {
 		t.Errorf("resolveSeeds(nil) = %v, want empty", addrs)
 	}
 }
+
+// TestStartStoppedReleasesPort: a cluster restart (server/cluster.go)
+// cancels discovery, waits on Stopped, and binds the same UDP port again
+// straight away.
+func TestStartStoppedReleasesPort(t *testing.T) {
+	probe, err := net.ListenUDP("udp4", &net.UDPAddr{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	port := probe.LocalAddr().(*net.UDPAddr).Port
+	probe.Close()
+
+	cfg := Config{
+		Port:        port,
+		Interval:    time.Hour,
+		TTL:         time.Hour,
+		SelfDevices: func() []ml.DeviceInfo { return nil },
+		SelfRPCPort: func() int { return 0 },
+		SelfLoad:    func() float64 { return 0 },
+	}
+	ctx, cancel := context.WithCancel(t.Context())
+	table, err := Start(ctx, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cancel()
+	select {
+	case <-table.Stopped():
+	case <-time.After(5 * time.Second):
+		t.Fatal("Stopped not closed after cancel")
+	}
+
+	ctx2, cancel2 := context.WithCancel(t.Context())
+	defer cancel2()
+	if _, err := Start(ctx2, cfg); err != nil {
+		t.Fatalf("restart on the same port: %v", err)
+	}
+}

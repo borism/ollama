@@ -393,10 +393,30 @@ func (c *Client) ListRunning(ctx context.Context) (*ProcessResponse, error) {
 
 // ClusterList lists this instance's known ollama-cluster peers (see
 // docs/cluster.mdx). Enabled is false, with an empty peer list, when this
-// instance isn't running with OLLAMA_CLUSTER=1.
+// instance has cluster mode off.
 func (c *Client) ClusterList(ctx context.Context) (*ClusterListResponse, error) {
 	var resp ClusterListResponse
 	if err := c.do(ctx, http.MethodGet, "/api/cluster/peers", nil, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+// ClusterConfig returns the server's cluster-mode settings.
+func (c *Client) ClusterConfig(ctx context.Context) (*ClusterConfig, error) {
+	var resp ClusterConfig
+	if err := c.do(ctx, http.MethodGet, "/api/cluster/config", nil, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+// UpdateClusterConfig changes the server's cluster-mode settings, saves
+// them in its ~/.ollama/server.json and applies them without a restart.
+// The server only accepts this from its own machine (a loopback address).
+func (c *Client) UpdateClusterConfig(ctx context.Context, req *ClusterConfigRequest) (*ClusterConfig, error) {
+	var resp ClusterConfig
+	if err := c.do(ctx, http.MethodPost, "/api/cluster/config", req, &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
