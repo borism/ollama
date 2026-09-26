@@ -30,12 +30,12 @@ import (
 )
 
 var (
-	// UpdateCheckURLBase is empty in this fork, which turns updates off:
-	// ollama.com only offers stock Ollama builds, so checking it would
-	// replace this app with one that has no cluster mode (and send it this
-	// install's ID and a signed request every hour). The app can't update
-	// itself from this fork's releases either, since they're not signed
-	// with a Developer ID. Set it to an update server to turn them back on.
+	// UpdateCheckURLBase is an update server speaking the stock protocol.
+	// It's empty in this fork: ollama.com only offers stock Ollama builds,
+	// so checking it would replace this app with one that has no cluster
+	// mode (and send it this install's ID and a signed request every hour).
+	// With it empty, updates come from UpdateGitHubRepo's releases instead
+	// (github.go). Empty both to turn updates off.
 	UpdateCheckURLBase      = ""
 	UpdateDownloaded        = false
 	UpdateCheckInterval     = 60 * 60 * time.Second
@@ -57,9 +57,12 @@ type UpdateResponse struct {
 }
 
 // Enabled reports whether this build looks for updates at all.
-func Enabled() bool { return UpdateCheckURLBase != "" }
+func Enabled() bool { return UpdateCheckURLBase != "" || UpdateGitHubRepo != "" }
 
 func (u *Updater) checkForUpdate(ctx context.Context) (bool, UpdateResponse) {
+	if UpdateCheckURLBase == "" {
+		return u.checkGitHubRelease(ctx)
+	}
 	var updateResp UpdateResponse
 
 	requestURL, err := url.Parse(UpdateCheckURLBase)

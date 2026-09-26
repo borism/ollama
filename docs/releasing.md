@@ -29,11 +29,21 @@ How `.github/workflows/release.yaml` and `scripts/install.sh` work for
   runner -- see `docs/mac-ci-runner-setup.md` for the one-time setup and
   the security scoping this requires (this repo is public). The app needs
   Node.js and `tsc`, which the golden image has.
-- **The desktop app doesn't update itself.** `app/updater` checks
-  `ollama.com/api/update` upstream, which would replace this fork's app
-  with stock Ollama, so `UpdateCheckURLBase` is empty here and updates
-  are off. To update, install the next release's `Ollama-darwin.zip`.
-  Upgrade path: sign with a Developer ID, then host an update feed.
+- **The desktop app updates from this repo's releases, not ollama.com.**
+  Upstream's `app/updater` checks `ollama.com/api/update`, which would
+  replace this fork's app with stock Ollama, so `UpdateCheckURLBase` is
+  empty here. `app/updater/github.go` asks the GitHub API for the repo's
+  latest release (`UpdateGitHubRepo`) instead: the newest **published**
+  one -- drafts and pre-releases don't count, so publish the draft the
+  release job creates -- and, if its tag is newer, downloads that release's
+  `Ollama-darwin.zip` when "Auto-download updates" is on. Versions compare as
+  `MAJOR.MINOR.PATCH` then the `-cluster.N` counter; a tag that doesn't
+  parse is never offered. The request carries no device ID or signature.
+  The install step only checks that the bundle's signature is intact (it
+  doesn't pin a team ID), so ad-hoc signed updates install. Expect macOS to
+  ask about Local Network access again after an update: an ad-hoc
+  signature's identity changes with every build (not tried).
+  Upgrade path: sign with a Developer ID, which also keeps that approval.
 - **No Windows.** Upstream's `windows-depends`/`windows-build`/
   `windows-app` jobs (384 lines) needed a Windows Authenticode cert and
   Google KMS signing credentials; dropped rather than left broken.

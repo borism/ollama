@@ -694,10 +694,10 @@ func TestTriggerImmediateCheck(t *testing.T) {
 	}
 }
 
-func TestUpdatesOffWithoutCheckURL(t *testing.T) {
-	oldStageDir, oldURL := UpdateStageDir, UpdateCheckURLBase
-	defer func() { UpdateStageDir, UpdateCheckURLBase = oldStageDir, oldURL }()
-	UpdateCheckURLBase = ""
+func TestUpdatesOffWithoutASource(t *testing.T) {
+	oldStageDir, oldURL, oldRepo := UpdateStageDir, UpdateCheckURLBase, UpdateGitHubRepo
+	defer func() { UpdateStageDir, UpdateCheckURLBase, UpdateGitHubRepo = oldStageDir, oldURL, oldRepo }()
+	UpdateCheckURLBase, UpdateGitHubRepo = "", ""
 	UpdateStageDir = t.TempDir()
 
 	// an update left behind by a stock Ollama install sharing the directory
@@ -721,6 +721,6 @@ func TestUpdatesOffWithoutCheckURL(t *testing.T) {
 	select {
 	case <-done:
 	case <-time.After(time.Second):
-		t.Error("background checker started with no update URL")
+		t.Error("background checker started with no update source")
 	}
 }
