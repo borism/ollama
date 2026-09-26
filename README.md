@@ -16,16 +16,18 @@ Uses [llama.cpp RPC](https://github.com/ggml-org/llama.cpp/blob/master/tools/rpc
 under the hood — no manual `--rpc` flags, no static peer list.
 
 ```shell
-OLLAMA_CLUSTER=1 ollama serve
+ollama cluster on
 ```
 
-Run that on every machine that should participate on the LAN. Each instance
+Run that on every machine that should participate on the LAN, with Ollama
+already running (or start the server with `OLLAMA_CLUSTER=1 ollama serve`).
+It takes effect without a restart and is remembered. Each instance
 broadcasts a discovery beacon, finds the others, and shares GPU capacity for
 requests that need it — the rest of Ollama's UX (pull, run, the API) is
 unchanged.
 
 - **Opt-in and per-machine.** A machine can consume peers' capacity without
-  donating its own (`OLLAMA_CLUSTER_SHARE=0`), or vice versa.
+  donating its own (`ollama cluster set share off`), or vice versa.
 - **Hub-and-spoke, not a mesh.** llama.cpp's RPC protocol is client/server
   with no worker-to-worker traffic, so unlike
   [EXO](https://github.com/exo-explore/exo)'s peer-election ring, one

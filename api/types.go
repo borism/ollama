@@ -871,12 +871,37 @@ type ProcessResponse struct {
 }
 
 // ClusterListResponse is the response from [Client.ClusterList]. Enabled is
-// false when this instance isn't running with OLLAMA_CLUSTER=1, in which
+// false when cluster mode is off on this instance, in which
 // case Peers is always empty -- not the same thing as "cluster is on but no
 // peers found yet".
 type ClusterListResponse struct {
 	Enabled bool          `json:"enabled"`
 	Peers   []ClusterPeer `json:"peers"`
+}
+
+// ClusterConfig is this instance's cluster-mode settings, from GET and
+// POST /api/cluster/config ([Client.ClusterConfig]).
+type ClusterConfig struct {
+	Enabled   bool   `json:"enabled"`
+	Share     bool   `json:"share"`
+	Seeds     string `json:"seeds"`
+	Placement string `json:"placement"`
+	CacheGB   uint   `json:"cache_gb"`
+	// Sources says where each value above comes from, keyed by its JSON
+	// name: "env" (an OLLAMA_CLUSTER* variable in the server's
+	// environment, which always wins), "config" (the server's
+	// ~/.ollama/server.json, which POST writes) or "default".
+	Sources map[string]string `json:"sources"`
+}
+
+// ClusterConfigRequest changes the cluster settings it sets; nil fields
+// keep their current value. See [Client.UpdateClusterConfig].
+type ClusterConfigRequest struct {
+	Enabled   *bool   `json:"enabled,omitempty"`
+	Share     *bool   `json:"share,omitempty"`
+	Seeds     *string `json:"seeds,omitempty"`
+	Placement *string `json:"placement,omitempty"`
+	CacheGB   *uint   `json:"cache_gb,omitempty"`
 }
 
 // ClusterPeer is one other ollama-cluster instance seen on the LAN, from

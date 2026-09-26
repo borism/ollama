@@ -174,25 +174,6 @@ func Remotes() []string {
 	return r
 }
 
-// ClusterSeeds is a comma-separated "host:port,host:port" list of
-// cluster-discovery beacon addresses to unicast directly to, for reaching
-// peers outside this host's broadcast domain (see cluster.Config.Seeds --
-// UDP broadcast doesn't cross a subnet/VLAN). Only meaningful when Cluster
-// is on. Empty by default: same-subnet broadcast discovery needs no seeds.
-func ClusterSeeds() []string {
-	raw := strings.TrimSpace(Var("OLLAMA_CLUSTER_SEEDS"))
-	if raw == "" {
-		return nil
-	}
-	var seeds []string
-	for _, s := range strings.Split(raw, ",") {
-		if s = strings.TrimSpace(s); s != "" {
-			seeds = append(seeds, s)
-		}
-	}
-	return seeds
-}
-
 func BoolWithDefault(k string) func(defaultValue bool) bool {
 	return func(defaultValue bool) bool {
 		if s := Var(k); s != "" {
@@ -245,31 +226,10 @@ var (
 	NoPrune = Bool("OLLAMA_NOPRUNE")
 	// SchedSpread allows scheduling models across all GPUs.
 	SchedSpread = Bool("OLLAMA_SCHED_SPREAD")
-	// Cluster turns on LAN autodiscovery of other ollama-cluster instances
-	// (see cluster.Start) and, unless ClusterShare is set false, donating
-	// this instance's spare GPU capacity as an RPC worker for them
-	// (llm.StartRPCWorker). Opt-in: llama.cpp's RPC backend is documented
-	// insecure upstream (tools/rpc/README.md in ggml-org/llama.cpp), this
-	// assumes a trusted LAN.
-	Cluster = Bool("OLLAMA_CLUSTER")
-	// ClusterShare controls whether this instance advertises spare GPU
-	// capacity to the cluster; only meaningful when Cluster is on. Default
-	// true -- set OLLAMA_CLUSTER_SHARE=0 to consume peers' capacity
-	// without donating this instance's own.
-	ClusterShare = BoolWithDefault("OLLAMA_CLUSTER_SHARE")
 	// ClusterPort is the UDP port used for cluster discovery beacons.
+	// The other cluster settings are in cluster.go: they can also come from
+	// ~/.ollama/server.json.
 	ClusterPort = Uint("OLLAMA_CLUSTER_PORT", 11435)
-	// ClusterPlacement selects how cluster.SelectRPCServers picks peers:
-	// "" or "waterfill" (default) weighs peers by load/latency and can
-	// spread a shortfall across several of them; "greedy" restores the
-	// original v1 behavior -- peers ranked by free memory, added until
-	// the shortfall is covered, ignoring load/latency. Overridable per
-	// request via api.Options.RPCPlacement.
-	ClusterPlacement = String("OLLAMA_CLUSTER_PLACEMENT")
-	// ClusterCacheGB caps the shared RPC worker's tensor cache (weights
-	// peers loaded onto this machine, kept so a reload skips the network;
-	// see llm/rpc_cache.go). 0 turns the cache off.
-	ClusterCacheGB = Uint("OLLAMA_CLUSTER_CACHE_GB", 32)
 	// ContextLength sets the default context length
 	ContextLength = Uint("OLLAMA_CONTEXT_LENGTH", 0)
 	// Auth enables authentication between the Ollama client and server
@@ -426,6 +386,13 @@ func Var(key string) string {
 // serverConfigData holds the parsed fields from ~/.ollama/server.json.
 type serverConfigData struct {
 	DisableOllamaCloud bool `json:"disable_ollama_cloud,omitempty"`
+
+	// Cluster settings, see cluster.go. Pointers: absent means "not set here".
+	Cluster          *bool   `json:"cluster,omitempty"`
+	ClusterShare     *bool   `json:"cluster_share,omitempty"`
+	ClusterSeeds     *string `json:"cluster_seeds,omitempty"`
+	ClusterPlacement *string `json:"cluster_placement,omitempty"`
+	ClusterCacheGB   *uint   `json:"cluster_cache_gb,omitempty"`
 }
 
 var (

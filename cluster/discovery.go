@@ -41,10 +41,17 @@ type announcement struct {
 
 // Table is a thread-safe, live set of peers seen via discovery beacons.
 type Table struct {
-	mu    sync.Mutex
-	self  Peer
-	peers map[string]Peer
-	ttl   time.Duration
+	mu      sync.Mutex
+	self    Peer
+	peers   map[string]Peer
+	ttl     time.Duration
+	stopped chan struct{}
+}
+
+// Stopped is closed once discovery has shut down after its context was
+// canceled and released its UDP port, so a restart can bind it again.
+func (t *Table) Stopped() <-chan struct{} {
+	return t.stopped
 }
 
 // Self returns our own current advertised state, for debugging/logging.
@@ -119,8 +126,9 @@ func Start(ctx context.Context, cfg Config) (*Table, error) {
 	}
 
 	t := &Table{
-		peers: make(map[string]Peer),
-		ttl:   cfg.TTL,
+		peers:   make(map[string]Peer),
+		ttl:     cfg.TTL,
+		stopped: make(chan struct{}),
 	}
 
 	go broadcastLoop(ctx, conn, cfg, t)
@@ -130,6 +138,7 @@ func Start(ctx context.Context, cfg Config) (*Table, error) {
 	go func() {
 		<-ctx.Done()
 		conn.Close()
+		close(t.stopped)
 	}()
 
 	return t, nil

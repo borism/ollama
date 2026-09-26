@@ -28,6 +28,35 @@ larger number of nodes.
 
 ## Enabling it
 
+On a machine where Ollama is already running (a Linux systemd service, or
+`ollama serve` in another terminal):
+
+```shell
+ollama cluster on
+```
+
+This takes effect right away, with no restart, and is saved in the
+server's `~/.ollama/server.json`, so it survives restarts. For the Linux
+service that file is `/usr/share/ollama/.ollama/server.json`: the server
+writes it itself, so it lands in the right place whichever user runs the
+service. `ollama cluster off` turns it off again, and `ollama cluster
+status` shows every cluster setting and where it comes from. The other
+settings in the table below are changed the same way:
+
+```shell
+ollama cluster set share off                # use peers' GPUs without sharing this one
+ollama cluster set seeds 192.0.2.10:11435   # "" clears
+ollama cluster set placement greedy
+ollama cluster set cache-gb 64
+```
+
+These only work from the machine the server runs on. A server exposed
+with `OLLAMA_HOST=0.0.0.0` refuses them from anywhere else, since cluster
+mode offers this machine's GPU to the whole LAN (see
+[Security](#security)).
+
+Or, when starting the server by hand:
+
 ```shell
 OLLAMA_CLUSTER=1 ollama serve
 ```
@@ -36,7 +65,7 @@ Do this on every machine that should participate. Each instance broadcasts
 a discovery beacon on the LAN and builds a table of peers automatically —
 nothing to configure on a same-subnet network.
 
-Once two or more instances are running with `OLLAMA_CLUSTER=1`, a request
+Once two or more instances have cluster mode on, a request
 for a model that doesn't fit locally will automatically pick a peer with
 free GPU memory and pass it to `llama-server` as an RPC worker.
 
@@ -130,14 +159,19 @@ so RDMA and non-RDMA machines mix freely in one cluster. Set
 
 ## Environment variables
 
+Each of these (except `OLLAMA_CLUSTER_PORT`) can also be set with `ollama
+cluster on/off/set`, which saves it in the server's `~/.ollama/server.json`
+under the key in parentheses. An environment variable that is set always
+wins over the saved value; `ollama cluster status` shows which one applies.
+
 | Variable | Default | Purpose |
 |---|---|---|
-| `OLLAMA_CLUSTER` | off | Turn on LAN discovery and (unless disabled below) donate spare GPU capacity to peers. |
-| `OLLAMA_CLUSTER_SHARE` | `true` | Set to `0`/`false` to discover and use peers' capacity without donating this machine's own. |
+| `OLLAMA_CLUSTER` (`cluster`) | off | Turn on LAN discovery and (unless disabled below) donate spare GPU capacity to peers. |
+| `OLLAMA_CLUSTER_SHARE` (`cluster_share`) | `true` | Set to `0`/`false` to discover and use peers' capacity without donating this machine's own. |
 | `OLLAMA_CLUSTER_PORT` | `11435` | UDP port used for discovery beacons. Must match across a fleet if changed. |
-| `OLLAMA_CLUSTER_SEEDS` | none | Comma-separated `host:port` list of peers to unicast directly to, for reaching machines outside this host's broadcast domain (a different subnet or VLAN — broadcast discovery doesn't cross those). Not needed on a flat LAN. |
-| `OLLAMA_CLUSTER_PLACEMENT` | `waterfill` | How peers are chosen when more than one has spare capacity: `waterfill` weighs peers by measured load and latency and can spread a shortfall across several; `greedy` instead just ranks by free memory and adds peers until the shortfall's covered. |
-| `OLLAMA_CLUSTER_CACHE_GB` | `32` | Cap on the tensor cache a sharing machine keeps in `~/.ollama/models/rpc/`: weights peers loaded onto it, so loading the same model again skips the network. The oldest files go first when it's over the cap or the disk has under 10 GiB free, and files that don't match their hash (a write cut short) are deleted. `0` turns the cache off. |
+| `OLLAMA_CLUSTER_SEEDS` (`cluster_seeds`) | none | Comma-separated `host:port` list of peers to unicast directly to, for reaching machines outside this host's broadcast domain (a different subnet or VLAN — broadcast discovery doesn't cross those). Not needed on a flat LAN. |
+| `OLLAMA_CLUSTER_PLACEMENT` (`cluster_placement`) | `waterfill` | How peers are chosen when more than one has spare capacity: `waterfill` weighs peers by measured load and latency and can spread a shortfall across several; `greedy` instead just ranks by free memory and adds peers until the shortfall's covered. |
+| `OLLAMA_CLUSTER_CACHE_GB` (`cluster_cache_gb`) | `32` | Cap on the tensor cache a sharing machine keeps in `~/.ollama/models/rpc/`: weights peers loaded onto it, so loading the same model again skips the network. The oldest files go first when it's over the cap or the disk has under 10 GiB free, and files that don't match their hash (a write cut short) are deleted. `0` turns the cache off. |
 
 ## Per-request overrides
 
@@ -161,8 +195,11 @@ priority over the server's environment-variable policy for that one request:
 
 llama.cpp's RPC backend is documented upstream as a proof of concept and
 **not secure** — assume anyone who can reach the port can use it. Only
-enable `OLLAMA_CLUSTER` on a trusted LAN or VPN (e.g. Tailscale, WireGuard),
-never on an open network.
+turn cluster mode on on a trusted LAN or VPN (e.g. Tailscale, WireGuard),
+never on an open network. For the same reason, the server only accepts
+`ollama cluster on/off/set` (`POST /api/cluster/config`) from its own
+machine, judged by the connection's address, not by any forwarding header;
+a reverse proxy on the same machine would count as local.
 
 ## Current limitations
 
