@@ -66,8 +66,11 @@ scope, current gaps, and how to cut one.
 curl -fsSL https://raw.githubusercontent.com/borism/ollama-cluster/main/scripts/install.sh | sh
 ```
 
-CPU-only on both platforms, and unsigned on macOS, for now -- see
-`docs/releasing.md`.
+Linux gets the same GPU backends as stock Ollama (NVIDIA CUDA 12/13,
+Vulkan, AMD ROCm, NVIDIA JetPack), with the installer fetching the
+ROCm/JetPack extras when it detects that hardware; macOS gets Metal, as
+an unsigned command-line install (no menu-bar app). No Linux MLX engine
+yet -- see `docs/releasing.md`.
 
 ### Windows
 

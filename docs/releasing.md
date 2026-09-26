@@ -5,14 +5,20 @@ How `.github/workflows/release.yaml` and `scripts/install.sh` work for
 
 ## Scope
 
-- **Linux**: amd64 + arm64, **CPU only**. No CUDA/ROCm/Vulkan backend
-  builds yet -- those need the same per-backend SDK containers
-  `.github/workflows/test.yaml`'s own `linux` matrix already uses
-  (`nvidia/cuda:...`, `rocm/dev-ubuntu-...`, a Vulkan SDK apt repo);
-  adding a backend here means adding a matching matrix entry there,
-  still on GitHub-hosted `ubuntu-latest`/`ubuntu-24.04-arm` (a Docker
-  `container:` works fine on a hosted runner for a compile-only build --
-  no GPU hardware needed to build against an SDK).
+- **Linux**: amd64 + arm64, **the same GPU backends as stock Ollama**,
+  built from the same `Dockerfile` stages upstream's release uses, one
+  stage per job (`linux-depends`) on GitHub-hosted `ubuntu-latest` /
+  `ubuntu-24.04-arm`, then assembled and split per arch (`linux-build`)
+  the way `scripts/build_linux.sh` does:
+  - amd64: CPU, CUDA 12, CUDA 13, Vulkan; ROCm 7.2 as a separate extra.
+  - arm64: CPU, CUDA 12, CUDA 13; JetPack 5 and 6 as separate extras.
+
+  **No MLX engine on Linux** (upstream builds `mlx_cuda_v13` with a
+  200 GB swap file; a hosted runner can't). No registry layer cache
+  either, so every release rebuilds every backend: the slowest job
+  (amd64 CUDA 12, 11 GPU architectures) took 2h42m of the 6h job limit
+  on the first run. Upgrade path: `cache-from`/`cache-to` against a GHCR
+  registry ref, same shape as upstream's Docker Hub cache.
 - **macOS**: universal (amd64+arm64) binary, **unsigned**. Built via
   `scripts/build_darwin.sh build package` -- deliberately skips `sign`
   (needs an Apple Developer ID + notarization secrets this fork doesn't
@@ -37,16 +43,26 @@ corner for the specific upgrade path.
 
 Both platforms produce the same `bin/ollama` + `lib/ollama/*` layout
 (`ml/path.go`'s runtime lookup accepts this on macOS too, not just
-Linux), so `scripts/install.sh` needs only one download+extract routine
-for both OSes:
+Linux):
 
-- `ollama-linux-amd64.tgz`, `ollama-linux-arm64.tgz`
+- `ollama-linux-amd64.tar.zst`, `ollama-linux-arm64.tar.zst` -- CPU,
+  CUDA, Vulkan
+- `ollama-linux-amd64-rocm.tar.zst`, `ollama-linux-arm64-jetpack5.tar.zst`,
+  `ollama-linux-arm64-jetpack6.tar.zst` -- extras, extracted over the
+  main tarball
 - `ollama-darwin.tgz` (universal)
 
-`install.sh` points at `https://github.com/borism/ollama-cluster/releases/...`,
-not `ollama.com` -- `OLLAMA_VERSION` picks a specific tag
-(`releases/download/vX.Y.Z/...`), otherwise it uses
-`releases/latest/download/...`.
+`scripts/install.sh` is upstream's script with only three changes
+(documented at its top): it downloads from
+`https://github.com/borism/ollama-cluster/releases/...` instead of
+`ollama.com`, `OLLAMA_VERSION` picks a release tag
+(`releases/download/vX.Y.Z/...`, otherwise `releases/latest/download/...`),
+and on macOS it installs the CLI tarball instead of `Ollama.app`.
+Everything else -- detecting NVIDIA/AMD/Jetson hardware, fetching the
+matching extra, setting up NVIDIA drivers and the systemd service -- is
+upstream's, unchanged. `releases/latest` never resolves to a
+pre-release, so publish a release with "Set as a pre-release" unticked
+for the plain `curl | sh` to find it.
 
 ## Cutting a release
 

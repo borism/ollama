@@ -1,12 +1,11 @@
 name: release
 
-# ponytail: Linux/macOS only, CPU-only Linux, unsigned macOS -- see README's
-# Release install section for the full scope note and upgrade path (Windows,
-# GPU backends, macOS signing/notarization). Trimmed down from upstream's
-# full matrix (Windows + CUDA/ROCm/Vulkan/MLX/Jetpack Linux + Docker image
-# publish), which needs infra this fork doesn't have: a Windows Authenticode
-# cert, an Apple Developer ID, and a Docker Hub account for the registry
-# build-cache upstream's linux-depends job pushes to.
+# ponytail: Linux/macOS only, unsigned macOS -- see docs/releasing.md for
+# the full scope and upgrade paths. Trimmed down from upstream's matrix:
+# no Windows (needs an Authenticode cert), no Docker image publish (needs
+# a Docker Hub account), no Linux MLX (needs a 200 GB swap build host),
+# and Linux builds run on GitHub-hosted runners without upstream's
+# registry layer cache.
 
 on:
   push:
