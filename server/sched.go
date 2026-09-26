@@ -560,7 +560,7 @@ func (s *Scheduler) load(req *LlmRequest, systemInfo ml.SystemInfo, gpus []ml.De
 			predicted := llm.PredictServerVRAM(req.model.ModelPath, f, predictedCtx)
 			reqOpts := req.opts
 			if s.clusterTable != nil && (reqOpts.RPCAuto == nil || *reqOpts.RPCAuto) {
-				reqOpts = cluster.SelectRPCServers(gpus, predicted, s.clusterTable.Peers(), reqOpts)
+				reqOpts = cluster.SelectReachableRPCServers(gpus, predicted, s.clusterTable.Peers(), reqOpts, cluster.DialRPC)
 			}
 			loadGpus, launchOpts = selectLlamaServerPlacement(systemInfo, gpus, predicted, reqOpts)
 			availableForBatch, _, _ := availableMemoryForPlacement(systemInfo, loadGpus, launchOpts)

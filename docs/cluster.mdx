@@ -104,6 +104,14 @@ One deliberate exception: a peer with less than 1 GiB of spare memory is
 skipped entirely, even if it could hold a layer or two — not worth a
 network hop for that little. That slice goes to CPU too.
 
+A peer that shows up in `ollama cluster ls` but doesn't accept a
+connection on its RPC port (a firewall, macOS Local Network permission
+not granted, or it just went away) is skipped the same way: each picked
+peer gets a quick connection check before the model loads, and placement
+is redone without the ones that fail, with a `cluster: skipping
+unreachable peer` warning in the server log. Peers set by hand with
+`rpc_servers` aren't checked.
+
 A non-zero `CPU` share in `ollama ps` (see above) while cluster mode is on
 is the direct, visible confirmation this happened — not a bug.
 
