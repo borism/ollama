@@ -15,9 +15,12 @@ import (
 	"github.com/borism/ollama-cluster/app/version"
 )
 
-// TestLiveAppUpdate exercises the production update endpoint and downloads the
-// current OS update artifact. It is intentionally excluded from normal test
-// runs because it depends on ollama.com and downloads a release artifact.
+// TestLiveAppUpdate exercises the production update source (this repo's
+// latest published GitHub release, see github.go) and downloads the current
+// OS update artifact. It is intentionally excluded from normal test runs
+// because it depends on the network and downloads a release artifact. It
+// skips while there's nothing to download: no published release yet, or no
+// installer for this OS (this fork ships no Windows app).
 //
 // Run with:
 //
@@ -65,7 +68,7 @@ func TestLiveAppUpdate(t *testing.T) {
 
 	available, updateResp := updater.checkForUpdate(ctx)
 	if !available {
-		t.Fatalf("expected production update check to offer an update for spoofed version %s", spoofedVersion)
+		t.Skipf("no published release of %s with a %s asset newer than spoofed version %s", UpdateGitHubRepo, Installer, spoofedVersion)
 	}
 	if updateResp.UpdateURL == "" {
 		t.Fatal("production update response did not include a download URL")

@@ -30,7 +30,13 @@ import (
 )
 
 var (
-	UpdateCheckURLBase      = "https://ollama.com/api/update"
+	// UpdateCheckURLBase is an update server speaking the stock protocol.
+	// It's empty in this fork: ollama.com only offers stock Ollama builds,
+	// so checking it would replace this app with one that has no cluster
+	// mode (and send it this install's ID and a signed request every hour).
+	// With it empty, updates come from UpdateGitHubRepo's releases instead
+	// (github.go). Empty both to turn updates off.
+	UpdateCheckURLBase      = ""
 	UpdateDownloaded        = false
 	UpdateCheckInterval     = 60 * 60 * time.Second
 	UpdateCheckInitialDelay = 3 * time.Second // 30 * time.Second
@@ -50,7 +56,13 @@ type UpdateResponse struct {
 	UpdateVersion string `json:"version"`
 }
 
+// Enabled reports whether this build looks for updates at all.
+func Enabled() bool { return UpdateCheckURLBase != "" || UpdateGitHubRepo != "" }
+
 func (u *Updater) checkForUpdate(ctx context.Context) (bool, UpdateResponse) {
+	if UpdateCheckURLBase == "" {
+		return u.checkGitHubRelease(ctx)
+	}
 	var updateResp UpdateResponse
 
 	requestURL, err := url.Parse(UpdateCheckURLBase)
@@ -357,6 +369,12 @@ func (u *Updater) StartBackgroundUpdaterChecker(ctx context.Context, cb func(str
 }
 
 func (u *Updater) startBackgroundUpdaterChecker(ctx context.Context, cb func(string) error) <-chan struct{} {
+	if !Enabled() {
+		slog.Info("updates are not enabled in this build")
+		done := make(chan struct{})
+		close(done)
+		return done
+	}
 	u.checkNow = make(chan struct{}, 1)
 	u.checkNow <- struct{}{} // Trigger first check after initial delay
 	done := make(chan struct{})

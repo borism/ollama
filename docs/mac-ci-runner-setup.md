@@ -5,6 +5,16 @@ on your own Mac (via [Tart](https://github.com/openai/tart), built on
 Apple's Virtualization.framework), so `darwin-build` doesn't cost anything
 and doesn't need GitHub billing sorted out.
 
+There are two images, one built on the other:
+
+- **`macos-xcode-golden`** -- the generic base (steps 1-7): macOS, Xcode with
+  the Metal toolchain, Homebrew, cmake, go, ccache, the Tart guest agent and
+  the GitHub Actions runner software. Nothing in it is specific to this
+  project, so other projects' macOS builds can clone it too.
+- **`ollama-cluster-darwin-golden`** -- this project's layer (step 8): the
+  base plus Node.js, TypeScript and the Vulkan SDK. This is the image
+  `scripts/mac-ci/ephemeral-darwin-runner.sh` clones for every release.
+
 **Over SSH, the external volume is blocked by default** (`Operation not
 permitted` on anything under `/Volumes/T9`, even though `df` works) — macOS
 privacy controls don't cover remote sessions unless you opt in. Rebooting
@@ -56,7 +66,7 @@ not `~/.bashrc`) so it's always set — every `tart` command below, and
 ## 2. Create the base VM from a fresh macOS IPSW
 
 ```shell
-tart create ollama-cluster-darwin-golden --from-ipsw=latest --disk-size 100
+tart create macos-xcode-golden --from-ipsw=latest --disk-size 100
 ```
 
 Downloads a full macOS installer (multi-GB) and installs it into a new VM
@@ -65,13 +75,13 @@ default 4 CPUs / 4 GB (clones inherit this; GitHub's own macOS runners get
 7 GB+):
 
 ```shell
-tart set ollama-cluster-darwin-golden --cpu 6 --memory 8192
+tart set macos-xcode-golden --cpu 6 --memory 8192
 ```
 
 ## 3. First boot: click through macOS Setup Assistant
 
 ```shell
-tart run ollama-cluster-darwin-golden
+tart run macos-xcode-golden
 ```
 
 A window opens showing the new "Mac"'s setup screen, like unboxing a real
@@ -87,7 +97,7 @@ Settings on the guest:
   agent from step 5 runs inside that session).
 - **General → Sharing → Remote Login** — turn on, and in its (ⓘ) panel turn
   on **Allow full disk access for remote users**. Only needed for setup over
-  SSH (`ssh <user>@$(tart ip ollama-cluster-darwin-golden)` from the host);
+  SSH (`ssh <user>@$(tart ip macos-xcode-golden)` from the host);
   the runner itself uses `tart exec`.
 
 ## 4. Inside the guest: install the build toolchain
@@ -178,7 +188,7 @@ sudo install -o root -g wheel -m 644 org.cirruslabs.tart-guest-agent.plist /Libr
 launchctl bootstrap gui/$(id -u) /Library/LaunchAgents/org.cirruslabs.tart-guest-agent.plist
 ```
 
-Check from the host: `tart exec ollama-cluster-darwin-golden bash -lc "xcrun
+Check from the host: `tart exec macos-xcode-golden bash -lc "xcrun
 --find metal; go version"`. Note: no `--` before the command — `tart exec`
 passes it through to the guest literally. A `failed to run vdagent` line in
 `/tmp/tart-guest-agent.log` is harmless (clipboard sharing, unused here).
@@ -211,10 +221,73 @@ Back on the host:
 tart list
 ```
 
-`ollama-cluster-darwin-golden` should show stopped. **Never boot this one
-directly for a real release** — `scripts/mac-ci/ephemeral-darwin-runner.sh`
-clones it fresh each time (copy-on-write, so this doesn't consume much
+`macos-xcode-golden` should show stopped. Don't boot it for anything but
+maintenance -- clone it for project images (step 8). **Never boot the
+project image directly for a real release** --
+`scripts/mac-ci/ephemeral-darwin-runner.sh` clones
+`ollama-cluster-darwin-golden` fresh each time (copy-on-write, so this doesn't consume much
 extra space per run) and destroys the clone after.
+
+## 8. This project's layer: `ollama-cluster-darwin-golden`
+
+Clone the base and boot the clone (not the base -- keep that one clean):
+
+```shell
+tart clone macos-xcode-golden ollama-cluster-darwin-golden
+tart run ollama-cluster-darwin-golden
+```
+
+The clone is copy-on-write, so it costs only what step 8 adds. Then, from
+the host (`tart exec` runs a login shell, so Homebrew is on the `PATH`; the
+guest has no passwordless `sudo`, so nothing here needs it):
+
+```shell
+# Node for the Settings UI (app/ui/app) and `tsc` for build_darwin.sh's
+# `app` step. node@20 is deprecated in Homebrew; the UI builds on 24.
+tart exec ollama-cluster-darwin-golden bash -lc '
+  brew install node@24 && brew link --overwrite --force node@24
+  npm install -g typescript@7.0.2'
+```
+
+The Vulkan SDK is for building `llama-server` with `GGML_VULKAN=ON` for
+Intel Macs (the TODO "Vulkan on Intel Macs"). LunarG's SDK bundles
+MoltenVK, the Vulkan loader, `glslc` and the SPIR-V tools as **universal**
+(x86_64 + arm64) binaries, so the arm64 VM can cross-build x86_64 against
+it. It installs into the user's home directory, no `sudo`. Check the
+download against the checksum LunarG publishes:
+
+```shell
+tart exec ollama-cluster-darwin-golden bash -lc '
+  V=1.4.357.1   # current: curl -s https://vulkan.lunarg.com/sdk/latest/mac.json
+  cd /tmp && curl -fLO https://sdk.lunarg.com/sdk/download/$V/mac/vulkan_sdk.zip
+  curl -s https://vulkan.lunarg.com/sdk/sha/$V/mac/vulkan_sdk.zip.json   # "sha"
+  shasum -a 256 vulkan_sdk.zip                                          # must match
+  unzip -q vulkan_sdk.zip
+  vulkansdk-macOS-$V.app/Contents/MacOS/vulkansdk-macOS-$V \
+    --root $HOME/VulkanSDK/$V --accept-licenses --default-answer --confirm-command install
+  ln -sfn $V ~/VulkanSDK/current
+  for f in ~/.bash_profile ~/.zprofile; do
+    printf "export VULKAN_SDK=\$HOME/VulkanSDK/current/macOS\nexport PATH=\$VULKAN_SDK/bin:\$PATH\n" >> $f
+  done
+  rm -rf /tmp/vulkan_sdk.zip /tmp/vulkansdk-macOS-*.app'
+```
+
+Check it (all three should print `x86_64 arm64`, `glslc` should resolve, and
+the last line should print `x86_64`):
+
+```shell
+tart exec ollama-cluster-darwin-golden bash -lc '
+  lipo -archs $VULKAN_SDK/lib/libvulkan.1.dylib $VULKAN_SDK/lib/libMoltenVK.dylib $VULKAN_SDK/bin/glslc
+  which glslc
+  printf "#include <vulkan/vulkan.h>\nint main(){return 0;}\n" > /tmp/t.c
+  clang -arch x86_64 -I$VULKAN_SDK/include /tmp/t.c -L$VULKAN_SDK/lib -lvulkan -o /tmp/t && lipo -archs /tmp/t'
+```
+
+Also try the app build once: copy the source in and run
+`cd app/ui/app && npm install && npm run build`, then remove what you
+copied and `tart stop ollama-cluster-darwin-golden`. None of this is in the
+repo's build scripts: it's the machine's setup, and the jobs that need it
+(the `app` step in `release.yaml`, a future Vulkan build) just use it.
 
 ## Using it
 
@@ -235,7 +308,12 @@ ssh <mac> "REG_TOKEN=$(gh api repos/borism/ollama-cluster/actions/runners/regist
 
 ## Rebuilding the golden image later
 
-Toolchain updates (new Xcode, new cmake/go) mean redoing steps 2-7 against
-a new VM name, then updating `GOLDEN_IMAGE` in
-`scripts/mac-ci/ephemeral-darwin-runner.sh`. Keep the old one around
-(`tart list`) until the new one's proven, then `tart delete` it.
+- **Project layer only** (a new Node or Vulkan SDK): `tart clone
+  macos-xcode-golden` to a new name, redo step 8 on it, then swap: keep the
+  old `ollama-cluster-darwin-golden` under another name (`tart rename`)
+  until the new one has run a release, then `tart delete` it.
+- **Toolchain** (new Xcode, cmake or go): redo steps 2-7 against a new
+  base name, re-derive the project image from it (step 8), and update
+  `GOLDEN_IMAGE` in `scripts/mac-ci/ephemeral-darwin-runner.sh` if the
+  project image's name changes. Keep the old images until the new ones are
+  proven.

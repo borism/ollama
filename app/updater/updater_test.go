@@ -693,3 +693,34 @@ func TestTriggerImmediateCheck(t *testing.T) {
 		t.Fatalf("TriggerImmediateCheck did not cause additional check: initial=%d, final=%d", initialCount, finalCount)
 	}
 }
+
+func TestUpdatesOffWithoutASource(t *testing.T) {
+	oldStageDir, oldURL, oldRepo := UpdateStageDir, UpdateCheckURLBase, UpdateGitHubRepo
+	defer func() { UpdateStageDir, UpdateCheckURLBase, UpdateGitHubRepo = oldStageDir, oldURL, oldRepo }()
+	UpdateCheckURLBase, UpdateGitHubRepo = "", ""
+	UpdateStageDir = t.TempDir()
+
+	// an update left behind by a stock Ollama install sharing the directory
+	staged := filepath.Join(UpdateStageDir, "etag")
+	if err := os.MkdirAll(staged, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"Ollama-darwin.zip", "OllamaSetup.exe"} {
+		if err := os.WriteFile(filepath.Join(staged, name), []byte("stock"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if IsUpdatePending() {
+		t.Error("a staged update counts as pending with updates off")
+	}
+
+	done := (&Updater{}).startBackgroundUpdaterChecker(context.Background(), func(string) error {
+		t.Error("update callback ran with updates off")
+		return nil
+	})
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Error("background checker started with no update source")
+	}
+}
