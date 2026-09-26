@@ -162,12 +162,13 @@ func logClusterPeers(ctx context.Context, table *cluster.Table) {
 // currentClusterConfig is what GET and POST /api/cluster/config return.
 func currentClusterConfig() api.ClusterConfig {
 	return api.ClusterConfig{
-		Enabled:   envconfig.Cluster(),
-		Share:     envconfig.ClusterShare(true),
-		Seeds:     strings.Join(envconfig.ClusterSeeds(), ","),
-		Placement: cmp.Or(envconfig.ClusterPlacement(), "waterfill"),
-		CacheGB:   envconfig.ClusterCacheGB(),
-		Sources:   envconfig.ClusterSources(),
+		Enabled:        envconfig.Cluster(),
+		Share:          envconfig.ClusterShare(true),
+		Seeds:          strings.Join(envconfig.ClusterSeeds(), ","),
+		Placement:      cmp.Or(envconfig.ClusterPlacement(), "waterfill"),
+		CacheGB:        envconfig.ClusterCacheGB(),
+		CacheUsedBytes: llm.RPCCacheBytes(envconfig.Models()),
+		Sources:        envconfig.ClusterSources(),
 	}
 }
 

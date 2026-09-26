@@ -887,6 +887,9 @@ type ClusterConfig struct {
 	Seeds     string `json:"seeds"`
 	Placement string `json:"placement"`
 	CacheGB   uint   `json:"cache_gb"`
+	// CacheUsedBytes is what the tensor cache holds now. Read-only: POST
+	// ignores it.
+	CacheUsedBytes uint64 `json:"cache_used_bytes"`
 	// Sources says where each value above comes from, keyed by its JSON
 	// name: "env" (an OLLAMA_CLUSTER* variable in the server's
 	// environment, which always wins), "config" (the server's
