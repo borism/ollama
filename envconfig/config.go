@@ -266,6 +266,10 @@ var (
 	// the shortfall is covered, ignoring load/latency. Overridable per
 	// request via api.Options.RPCPlacement.
 	ClusterPlacement = String("OLLAMA_CLUSTER_PLACEMENT")
+	// ClusterCacheGB caps the shared RPC worker's tensor cache (weights
+	// peers loaded onto this machine, kept so a reload skips the network;
+	// see llm/rpc_cache.go). 0 turns the cache off.
+	ClusterCacheGB = Uint("OLLAMA_CLUSTER_CACHE_GB", 32)
 	// ContextLength sets the default context length
 	ContextLength = Uint("OLLAMA_CONTEXT_LENGTH", 0)
 	// Auth enables authentication between the Ollama client and server

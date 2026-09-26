@@ -137,6 +137,7 @@ so RDMA and non-RDMA machines mix freely in one cluster. Set
 | `OLLAMA_CLUSTER_PORT` | `11435` | UDP port used for discovery beacons. Must match across a fleet if changed. |
 | `OLLAMA_CLUSTER_SEEDS` | none | Comma-separated `host:port` list of peers to unicast directly to, for reaching machines outside this host's broadcast domain (a different subnet or VLAN — broadcast discovery doesn't cross those). Not needed on a flat LAN. |
 | `OLLAMA_CLUSTER_PLACEMENT` | `waterfill` | How peers are chosen when more than one has spare capacity: `waterfill` weighs peers by measured load and latency and can spread a shortfall across several; `greedy` instead just ranks by free memory and adds peers until the shortfall's covered. |
+| `OLLAMA_CLUSTER_CACHE_GB` | `32` | Cap on the tensor cache a sharing machine keeps in `~/.ollama/models/rpc/`: weights peers loaded onto it, so loading the same model again skips the network. The oldest files go first when it's over the cap or the disk has under 10 GiB free, and files that don't match their hash (a write cut short) are deleted. `0` turns the cache off. |
 
 ## Per-request overrides
 

@@ -3,13 +3,17 @@ package llm
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/borism/ollama-cluster/envconfig"
 )
 
 // RPCWorker manages a running ggml-rpc-server subprocess: this Ollama
@@ -66,11 +70,21 @@ func StartRPCWorker(port int, cacheDir string) (*RPCWorker, error) {
 	// bind. Add a host param if one shows up.
 	host := "0.0.0.0"
 	args := []string{"-H", host, "-p", strconv.Itoa(port)}
-	if cacheDir != "" {
-		if err := os.MkdirAll(cacheDir, 0o755); err != nil {
+	// rpc-server.cpp puts its cache in $LLAMA_CACHE + "rpc/" (see below).
+	rpcCache := filepath.Join(cacheDir, "rpc")
+	maxCache := uint64(envconfig.ClusterCacheGB()) << 30
+	if cacheDir != "" && maxCache > 0 {
+		if err := os.MkdirAll(rpcCache, 0o755); err != nil {
 			return nil, fmt.Errorf("create rpc cache dir: %w", err)
 		}
-		args = append(args, "-c")
+		if tidyRPCCache(rpcCache, maxCache, time.Now(), diskFree) {
+			args = append(args, "-c")
+		} else {
+			slog.Warn("cluster: under 10 GiB of disk free, sharing without the RPC tensor cache", "dir", rpcCache)
+			cacheDir = ""
+		}
+	} else {
+		cacheDir = ""
 	}
 
 	cmd := exec.Command(exe, args...)
@@ -111,7 +125,27 @@ func StartRPCWorker(port int, cacheDir string) (*RPCWorker, error) {
 		return nil, err
 	}
 
+	if cacheDir != "" {
+		go w.tidyCache(rpcCache, maxCache)
+	}
 	return w, nil
+}
+
+// tidyCache runs tidyRPCCache every rpcCacheTidyInterval until the worker
+// exits. It can't turn a running worker's cache off, only free space for it.
+func (w *RPCWorker) tidyCache(dir string, maxBytes uint64) {
+	t := time.NewTicker(rpcCacheTidyInterval)
+	defer t.Stop()
+	for {
+		select {
+		case <-w.done:
+			return
+		case <-t.C:
+			if !tidyRPCCache(dir, maxBytes, time.Now(), diskFree) {
+				slog.Warn("cluster: under 10 GiB of disk free even with the RPC tensor cache emptied", "dir", dir)
+			}
+		}
+	}
 }
 
 // waitUntilListening polls the worker's port until a TCP connection
